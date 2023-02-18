@@ -18,7 +18,7 @@
       <span id="puck"></span>
     </div>
 
-    <p id="speed">0</p>
+    <p id="speed">0.00</p>
     <form>
       <input type="submit" value="Left" />
       <input type="submit" value="Right" />
@@ -29,18 +29,19 @@
       const track = document.querySelector('div');
       const speedDOM = document.getElementById('speed');
 
-      const gravityAcceleration = 9.8 / 1000; // px/milli/milli
+      const gravityAcceleration = -9.8; // px/sec/sec
 
-      const puckMass = 0.45; // (this is about a shuffleboard disk in kg)
-      const puckFriction = 0.5; // (this is about a shuffle board disk+table)
+      const puckMass = 0.17; // (this is about a hockey puck in kg, doesnt actually matter for *kinetic* friction, but will for endpoint spring behavior)
+      const puckFriction = 0.15; // (kinetic friciton of rubber and ice)
       const puckForceGravity = puckMass * gravityAcceleration;
       const puckFrictionForce = puckForceGravity * puckFriction;
-      const puckDeccelerationFromFriction = -1 * puckFrictionForce / puckMass; // px/milli/milli
+      const puckDeccelerationFromFriction = puckFrictionForce / puckMass / 1000; // px/milli/milli
 
       let dragging = false;
       
       let rawSpeeds = [];
       let speed = 0;
+      let speedStart = 0;
       let left = 0;
       let leftStart = undefined;
       let leftDelta = 0;
@@ -53,7 +54,6 @@
 
       let momentumRaf = undefined;
       let momentumRafStart = undefined;
-      let momentumRafPrev = undefined;
 
       function startMove(event) {
         dragging = true;
@@ -70,7 +70,6 @@
         leftStart = left;
         raf = window.requestAnimationFrame(animateDrag);
         window.cancelAnimationFrame(momentumRaf);
-        momentumRafPrev = undefined;
         momentumRafStart = undefined;
       }
 
@@ -108,7 +107,6 @@
         // stop animation (TODO: keep going and have it kill itself with friction)
         window.cancelAnimationFrame(raf);
         timePrev = undefined;
-        leftStart = undefined;
         rawSpeeds = [];
 
         // hand off to new raf to carry momentum
@@ -129,9 +127,9 @@
         speed = Math.sqrt(-2 * puckDeccelerationFromFriction * Math.abs(diff));
         if (speed * diff < 0) speed *= -1
 
-        momentumRafPrev = undefined;
-        momentumRafStart = undefined;
         window.cancelAnimationFrame(momentumRaf);
+
+        momentumRafStart = undefined;
         momentumRaf = window.requestAnimationFrame(animateMomentum);
       });
 
@@ -165,29 +163,30 @@
       }
 
       function animateMomentum(time) {
-        if (!momentumRafStart) momentumRafStart = time;
-        if (!momentumRafPrev) momentumRafPrev = time;
-        const elapsed = time - momentumRafPrev;
-        const elapsedTotal = time - momentumRafStart;
+        if (!momentumRafStart) {
+          leftStart = left;
+          speedStart = speed;
+          momentumRafStart = time;
+        }
 
-        const newLeft = left + (speed * elapsed);
-        leftDelta = newLeft - left;
-        left = newLeft;
-        puck.style.left = left + 'px';
+        const elapsed = time - momentumRafStart;
+        const acc = puckDeccelerationFromFriction * (speedStart > 0 ? 1 : -1);
+        const newSpeed = speedStart + (acc * elapsed)
 
-        const newSpeed = speed + (puckDeccelerationFromFriction * elapsed * (speed > 0 ? 1 : -1))
-
-        if (newSpeed * speed <= 0) {
+        if (newSpeed * speedStart < 0) {
           // this means they switched sign
           speed = 0;
           speedDOM.innerHTML = speed.toFixed(2);
           return;
         }
 
+        leftDelta = (speedStart * elapsed) + (0.5 * acc * Math.pow(elapsed, 2));
+        left = leftStart + leftDelta;
+        puck.style.left = left + 'px';
+
         speed = newSpeed;
         speedDOM.innerHTML = speed.toFixed(2);
 
-        momentumRafPrev = time;
         momentumRaf = window.requestAnimationFrame(animateMomentum);
       }
     </script>
