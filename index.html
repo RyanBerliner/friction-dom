@@ -33,6 +33,7 @@
 
       let dragging = false;
       
+      let rawSpeeds = [];
       let speed = 0;
       let left = 0;
       let leftStart = undefined;
@@ -102,6 +103,7 @@
         window.cancelAnimationFrame(raf);
         timePrev = undefined;
         leftStart = undefined;
+        rawSpeeds = [];
 
         // hand off to new raf to carry momentum
         if (speed) momentumRaf = window.requestAnimationFrame(animateMomentum);
@@ -129,8 +131,11 @@
         } // else lets use momentum and friction to keep the motion going
 
         const elapsed = time - timePrev;
+        const rawSpeed = elapsed ? leftDelta / elapsed : 0; // px/ms
+        const lastN = 5;
 
-        speed = elapsed ? leftDelta / elapsed : 0; // px/ms
+        rawSpeeds.push(rawSpeed);
+        speed = rawSpeeds.slice(-1 * lastN).reduce((a, b) => a + b) / lastN;
         speedDOM.innerHTML = speed.toFixed(2);
         raf = window.requestAnimationFrame(animateDrag);
         timePrev = time;
