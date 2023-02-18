@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction DOM</title>
+    <style>
+      * {box-sizing: border-box;}
+      div {border: 1px solid black; position: relative; border-radius: 11px;}
+      #puck {display: block; background: black; height: 20px; width: 40px; position: relative; border-radius: 10px; cursor: grab;}
+      #speed {text-align: center;}
+    </style>
+  </head>
+  <body>
+    <div>
+      <span id="puck"></span>
+    </div>
+
+    <p id="speed">0</p>
+
+    <script>
+      const puck = document.getElementById('puck');
+      const speedDOM = document.getElementById('speed');
+
+      const gravityAcceleration = 9.8 / 1000; // px/millsecond^2
+
+      const puckMass = 0.45; // (this is about a shuffleboard disk in kg)
+      const puckFriction = 0.5; // (this is about a shuffle board disk+table)
+      const puckForceGravity = puckMass * gravityAcceleration;
+      const puckFrictionForce = puckForceGravity * puckFriction;
+      const puckDeccelerationFromFriction = -puckFrictionForce / puckMass; // px/millisecond^2
+
+      let dragging = false;
+      
+      let speed = 0;
+      let left = 0;
+      let leftStart = undefined;
+      let leftDelta = 0;
+
+      const cursor = {x: 0, y: 0};
+      const cursorStart = {...cursor};
+
+      let raf = undefined;
+      let timePrev = undefined;
+
+      let momentumRaf = undefined;
+      let momentumRafStart = undefined;
+      let momentumRafPrev = undefined;
+
+      puck.addEventListener('mousedown', event => {
+        dragging = true;
+        puck.style.cursor = 'grabbing';
+
+        cursorStart.x = cursor.x;
+        cursorStart.y = cursor.y;
+
+        leftStart = left;
+        raf = window.requestAnimationFrame(animateDrag);
+        window.cancelAnimationFrame(momentumRaf);
+        momentumRafPrev = undefined;
+        momentumRafStart = undefined;
+      });
+
+      document.addEventListener('mousemove', event => {
+        cursor.x = event.clientX;
+        cursor.y = event.clientY;
+      });
+
+      document.addEventListener('mouseup', event => {
+        if (!dragging) return;
+
+        if (event.target === puck) {
+          // delegated event specific stuff if any
+        }
+
+        dragging = false;
+        puck.style.cursor = null;
+
+        // stop animation (TODO: keep going and have it kill itself with friction)
+        window.cancelAnimationFrame(raf);
+        timePrev = undefined;
+        leftStart = undefined;
+
+        // hand off to new raf to carry momentum
+        if (speed) momentumRaf = window.requestAnimationFrame(animateMomentum);
+      });
+
+      function animateDrag(time) {
+        if (!timePrev) timePrev = time;
+
+        if (dragging) {
+          const cursorDiff = cursor.x - cursorStart.x;
+          const newLeft = leftStart + cursorDiff;
+          leftDelta = newLeft - left;
+          left = leftStart + cursorDiff;
+          puck.style.left = left + 'px';
+        } // else lets use momentum and friction to keep the motion going
+
+        const elapsed = time - timePrev;
+
+        speed = elapsed ? leftDelta / elapsed : 0; // px/ms
+        speedDOM.innerHTML = speed.toFixed(2);
+        raf = window.requestAnimationFrame(animateDrag);
+        timePrev = time;
+      }
+
+      function animateMomentum(time) {
+        if (!momentumRafStart) momentumRafStart = time;
+        if (!momentumRafPrev) momentumRafPrev = time;
+        const elapsed = time - momentumRafPrev;
+        const elapsedTotal = time - momentumRafStart;
+
+        const newLeft = left + (speed * elapsed);
+        leftDelta = newLeft - left;
+        left = newLeft;
+        puck.style.left = left + 'px';
+
+        const newSpeed = speed + (puckDeccelerationFromFriction * elapsed * (speed > 0 ? 1 : -1))
+
+        if (newSpeed * speed <= 0) {
+          // this means they switched sign
+          speed = 0;
+          return;
+        }
+
+        speed = newSpeed;
+
+        momentumRafPrev = time;
+        momentumRaf = window.requestAnimationFrame(animateMomentum);
+      }
+    </script>
+  </body>
+</html>
