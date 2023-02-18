@@ -10,6 +10,7 @@
       div {border: 1px solid black; position: relative; border-radius: 21px;}
       #puck {display: block; background: black; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
       #speed {text-align: center;}
+      form {display: flex; justify-content: space-between;}
     </style>
   </head>
   <body>
@@ -18,9 +19,14 @@
     </div>
 
     <p id="speed">0</p>
+    <form>
+      <input type="submit" value="Left" />
+      <input type="submit" value="Right" />
+    </form>
 
     <script>
       const puck = document.getElementById('puck');
+      const track = document.querySelector('div');
       const speedDOM = document.getElementById('speed');
 
       const gravityAcceleration = 9.8 / 1000; // px/milli/milli
@@ -111,6 +117,23 @@
 
       document.addEventListener('mouseup', endMove);
       document.addEventListener('touchend', endMove);
+
+      document.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();
+        const currentLocation = puck.getBoundingClientRect();
+        const trackLocation = track.getBoundingClientRect();
+
+        const direction = event.submitter.value;
+        const diff =  trackLocation[direction.toLowerCase()] - currentLocation[direction.toLowerCase()];
+
+        speed = Math.sqrt(-2 * puckDeccelerationFromFriction * Math.abs(diff));
+        if (speed * diff < 0) speed *= -1
+
+        momentumRafPrev = undefined;
+        momentumRafStart = undefined;
+        window.cancelAnimationFrame(momentumRaf);
+        momentumRaf = window.requestAnimationFrame(animateMomentum);
+      });
 
       function animateDrag(time) {
         if (!timePrev) timePrev = time;
