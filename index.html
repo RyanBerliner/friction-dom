@@ -29,68 +29,60 @@
       const track = document.querySelector('div');
       const speedDOM = document.getElementById('speed');
 
-      const gravityAcceleration = -9.8; // px/sec/sec
+      // TODO: These three need to be updated on screen size changes
+      const leftEdge = 0;
+      const rightEdge = track.offsetWidth - puck.offsetWidth;
 
-      const puckMass = 0.17; // (this is about a hockey puck in kg, doesnt actually matter for *kinetic* friction, but will for endpoint spring behavior)
-      const puckFriction = 0.15; // (kinetic friciton of rubber and ice)
-      const puckForceGravity = puckMass * gravityAcceleration;
-      const puckFrictionForce = puckForceGravity * puckFriction;
-      const puckDeccelerationFromFriction = puckFrictionForce / puckMass / 1000; // px/milli/milli
+      const mass = 0.17; // kg (this is a hockey puck)
+      const friction = 0.15; // (kinetic friction of rubber and ice)
+      const gravity = 9.8; // px/sec/sec
+      const spring = 0.16; // spring constant N/px (will deform 10px if suspending puck vertically)
+      const damping = 5; // N/px/sec damping coefficient
 
-      const springConstant = 1;
-      let springDisplacement;
+      let acceleration = 0; // px/milli/milli
+      let velocity = 0; // px/milli
+      let position = 0; // px
 
       let dragging = false;
-      
-      let rawSpeeds = [];
-      let speed = 0;
-      let speedStart = 0;
-      let left = 0;
-      let leftStart = undefined;
-      let leftDelta = 0;
+      let hittingEdgeRight = false;
+      let hittingEdgeLeft = false;
 
       const cursor = {x: 0, y: 0};
-      const cursorStart = {...cursor};
+      const cursorLast = {...cursor};
 
+      let rafStart = undefined;
+      let rafLast = undefined;
       let raf = undefined;
-      let timePrev = undefined;
-
-      let momentumRaf = undefined;
-      let momentumRafStart = undefined;
-
-      let springRaf = undefined;
-      let springRafStart = undefined;
 
       function startMove(event) {
         dragging = true;
         puck.style.cursor = 'grabbing';
 
         if (event.targetTouches) {
-          cursorStart.x = undefined;
-          cursorStart.y = undefined;
+          cursorLast.x = undefined;
+          cursorLast.y = undefined;
         } else {
-          cursorStart.x = cursor.x;
-          cursorStart.y = cursor.y;
+          cursorLast.x = cursor.x;
+          cursorLast.y = cursor.y;
         }
 
-        leftStart = left;
-        raf = window.requestAnimationFrame(animateDrag);
-        window.cancelAnimationFrame(momentumRaf);
-        momentumRafStart = undefined;
-        window.cancelAnimationFrame(springRaf);
-        springRafStart = undefined;
+        rafStart = undefined;
+        rafLast = undefined;
+        hittingEdgeRight = false;
+        hittingEdgeLeft = false;
+        window.cancelAnimationFrame(raf);
+        raf = window.requestAnimationFrame(updatePosition);
       }
 
       puck.addEventListener('mousedown', startMove);
       puck.addEventListener('touchstart', startMove);
 
       function move(event) {
+        cursorLast.x = cursor.x;
+        cursorLast.y = cursor.y;
+
         if (event.targetTouches) {
           const {screenX, screenY} = event.targetTouches[0];
-
-          if (cursorStart.x === undefined) cursorStart.x = screenX;
-          if (cursorStart.y === undefined) cursorStart.y = screenY;
-
           cursor.x = screenX;
           cursor.y = screenY;
         } else {
@@ -104,161 +96,71 @@
 
       function endMove(event) {
         if (!dragging) return;
-
-        if (event.target === puck) {
-          // delegated event specific stuff if any
-        }
-
         dragging = false;
         puck.style.cursor = null;
-
-        // stop animation (TODO: keep going and have it kill itself with friction)
-        window.cancelAnimationFrame(raf);
-        timePrev = undefined;
-        rawSpeeds = [];
-
-        // hand off to new raf to carry momentum
-        if (speed) momentumRaf = window.requestAnimationFrame(animateMomentum);
       }
 
       document.addEventListener('mouseup', endMove);
       document.addEventListener('touchend', endMove);
 
-      document.querySelector('form').addEventListener('submit', event => {
-        event.preventDefault();
-        const currentLocation = puck.getBoundingClientRect();
-        const trackLocation = track.getBoundingClientRect();
+      function updatePosition(time) {
+        if (!dragging && velocity === 0) return;
+        if (!rafStart) rafStart = time;
 
-        const direction = event.submitter.value;
-        const diff =  trackLocation[direction.toLowerCase()] - currentLocation[direction.toLowerCase()];
-
-        speed = Math.sqrt(-2 * puckDeccelerationFromFriction * Math.abs(diff));
-        if (speed * diff < 0) speed *= -1
-
-        window.cancelAnimationFrame(momentumRaf);
-        window.cancelAnimationFrame(springRaf);
-
-        springRafStart = undefined;
-        momentumRafStart = undefined;
-        momentumRaf = window.requestAnimationFrame(animateMomentum);
-      });
-
-      function animateDrag(time) {
-        if (!timePrev) timePrev = time;
-
-        if (cursorStart.x === undefined || cursorStart.y === undefined) {
-          raf = window.requestAnimationFrame(animateDrag);
-          timePrev = time;
-          return;
-        };
-
+        const timeDelta = rafLast ? time - rafLast : undefined;
 
         if (dragging) {
-          const cursorDiff = cursor.x - cursorStart.x;
-          const newLeft = leftStart + cursorDiff;
-          leftDelta = newLeft - left;
-          left = leftStart + cursorDiff;
-          puck.style.left = left + 'px';
-        } // else lets use momentum and friction to keep the motion going
+          const positionDelta = cursor.x - cursorLast.x;
+          position += positionDelta;
+          const newVelocity = timeDelta ? positionDelta / timeDelta : 0;
+          const velocityDelta = newVelocity - velocity;
+          velocity = newVelocity;
+          acceleration = timeDelta ? velocityDelta / timeDelta : 0;
+        } else {
+          const forces = [friction * (mass * gravity) * (velocity > 0 ? -1 : 1)] // friction is always a thing
 
-        const elapsed = time - timePrev;
-        const rawSpeed = elapsed ? leftDelta / elapsed : 0; // px/ms
-        const lastN = 5;
+          if (hittingEdgeRight || (velocity > 0 && position > rightEdge)) {
+            hittingEdgeRight = true;
+            forces.push(spring * (rightEdge - position)); // force of spring
+            forces.push(damping * -velocity); // force of damper
+          }
 
-        rawSpeeds.push(rawSpeed);
-        speed = rawSpeeds.slice(-1 * lastN).reduce((a, b) => a + b) / lastN;
-        speedDOM.innerHTML = speed.toFixed(2);
-        raf = window.requestAnimationFrame(animateDrag);
-        timePrev = time;
+          if (hittingEdgeLeft || (velocity < 0 && position < leftEdge)) {
+            hittingEdgeLeft = true;
+            forces.push(spring * (leftEdge - position)); // force of spring
+            forces.push(damping * -velocity); // force of damper
+          }
+
+          acceleration = forces.reduce((sum, x) => sum + x, 0) / mass / 1000;
+          const newVelocity = velocity + (acceleration * timeDelta);
+          velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
+          position += velocity * timeDelta;
+        }
+
+        puck.style.left = position + 'px';
+        speedDOM.innerHTML = velocity.toFixed(2);
+
+        rafLast = time;
+        raf = window.requestAnimationFrame(updatePosition);
       }
 
-      function animateMomentum(time) {
-        if (!momentumRafStart) {
-          leftStart = left;
-          speedStart = speed;
-          momentumRafStart = time;
-        }
+      // document.querySelector('form').addEventListener('submit', event => {
+      //   event.preventDefault();
+      //   const currentLocation = puck.getBoundingClientRect();
 
-        const elapsed = time - momentumRafStart;
-        const acc = puckDeccelerationFromFriction * (speedStart > 0 ? 1 : -1);
-        const newSpeed = speedStart + (acc * elapsed)
+      //   const direction = event.submitter.value;
+      //   const diff =  trackLocation[direction.toLowerCase()] - currentLocation[direction.toLowerCase()];
 
-        if (newSpeed * speedStart <= 0) {
-          // this means they switched sign
-          speed = 0;
-          speedDOM.innerHTML = speed.toFixed(2);
-          return;
-        }
+      //   velocity = Math.sqrt(-2 * puckDeccelerationFromFriction * Math.abs(diff));
+      //   if (speed * diff < 0) speed *= -1
 
-        leftDelta = (speedStart * elapsed) + (0.5 * acc * Math.pow(elapsed, 2));
-        left = leftStart + leftDelta;
-        puck.style.left = left + 'px';
+      //   window.cancelAnimationFrame(momentumRaf);
+      //   window.cancelAnimationFrame(springRaf);
 
-        speed = newSpeed;
-        speedDOM.innerHTML = speed.toFixed(2);
-
-        const currentLocation = puck.getBoundingClientRect();
-        const trackLocation = track.getBoundingClientRect();
-
-        let overshooting = false;
-        if (currentLocation.right > trackLocation.right) overshooting = speed > 0;
-        if (currentLocation.left < trackLocation.left) overshooting = speed < 0;
-
-        if (overshooting) {
-          springRafStart = undefined;
-          springRaf = window.requestAnimationFrame(animateSpring);
-          return;
-        }
-
-        momentumRaf = window.requestAnimationFrame(animateMomentum);
-      }
-
-      let lastAmplitude;
-
-      function animateSpring(time) {
-        if (!springRafStart) {
-          lastAmplitude = Infinity;
-          springRafStart = time;
-          const currentLocation = puck.getBoundingClientRect();
-          const trackLocation = track.getBoundingClientRect();
-
-          springDisplacement = speed > 0
-            ? currentLocation.right - trackLocation.right
-            : currentLocation.left - trackLocation.left;
-
-          leftStart = left - springDisplacement;
-        }
-
-        const elapsed = time - springRafStart;
-
-        const forceOfSpring = springConstant * springDisplacement;
-        const accelFromSpring = (forceOfSpring / puckMass) / 1000;
-        const accelFromFriction = puckDeccelerationFromFriction * (speed > 0 ? 1 : -1);
-
-        speed += (accelFromSpring + accelFromFriction) * elapsed;
-        left = left + (speed * elapsed);
-
-        const newSpringDisplacement = leftStart - left;
-        if (Math.abs(newSpringDisplacement) < Math.abs(springDisplacement)) {
-          lastAmplitude = Math.abs(springDisplacement);
-        }
-
-        if (lastAmplitude < 1) {
-          speed = 0;
-          puck.style.left = leftStart + 'px';
-          speedDOM.innerHTML = speed.toFixed(2);
-          return;
-        }
-
-        springDisplacement = leftStart - left;
-
-        puck.style.left = left + 'px';
-
-        speedDOM.innerHTML = speed.toFixed(2);
-
-        springRaf = window.requestAnimationFrame(animateSpring);
-        springRafStart = time;
-      }
+      //   springRafStart = undefined;
+      //   momentumRafStart = undefined;
+      //   momentumRaf = window.requestAnimationFrame(animateMomentum);
+      // });
     </script>
   </body>
 </html>
