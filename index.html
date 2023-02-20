@@ -51,6 +51,7 @@
       let dragging = false;
       let hittingEdgeRight = false;
       let hittingEdgeLeft = false;
+      let occilationAmplitude = Infinity;
 
       const cursor = {x: 0, y: 0};
       const cursorLast = {...cursor};
@@ -59,11 +60,23 @@
       let rafLast = undefined;
       let raf = undefined;
 
+      function beginMotion() {
+        rafStart = undefined;
+        rafLast = undefined;
+        hittingEdgeRight = false;
+        hittingEdgeLeft = false;
+        occilationAmplitude = Infinity;
+        window.cancelAnimationFrame(raf);
+        raf = window.requestAnimationFrame(updatePosition);
+      }
+
       function startMove(event) {
         dragging = true;
         puck.style.cursor = 'grabbing';
 
         if (event.targetTouches) {
+          cursor.x = undefined;
+          cursor.y = undefined;
           cursorLast.x = undefined;
           cursorLast.y = undefined;
         } else {
@@ -71,21 +84,13 @@
           cursorLast.y = cursor.y;
         }
 
-        rafStart = undefined;
-        rafLast = undefined;
-        hittingEdgeRight = false;
-        hittingEdgeLeft = false;
-        window.cancelAnimationFrame(raf);
-        raf = window.requestAnimationFrame(updatePosition);
+        beginMotion();
       }
 
       puck.addEventListener('mousedown', startMove);
       puck.addEventListener('touchstart', startMove);
 
       function move(event) {
-        cursorLast.x = cursor.x;
-        cursorLast.y = cursor.y;
-
         if (event.targetTouches) {
           const {screenX, screenY} = event.targetTouches[0];
           cursor.x = screenX;
@@ -116,7 +121,7 @@
         const timeDelta = rafLast ? time - rafLast : undefined;
 
         if (dragging) {
-          const positionDelta = cursor.x - cursorLast.x;
+          const positionDelta = cursor.x === undefined || cursorLast.x === undefined ? 0 : cursor.x - cursorLast.x;
           position += positionDelta;
           const newVelocity = timeDelta ? toMeters(positionDelta) / timeDelta : 0;
           const velocityDelta = newVelocity - velocity;
@@ -128,18 +133,24 @@
           if (hittingEdgeRight || (velocity > 0 && position > rightEdge)) {
             hittingEdgeRight = true;
             forces.push(spring * (rightEdge - position)); // force of spring
-            forces.push(damping * -velocity); // force of damper
           }
 
           if (hittingEdgeLeft || (velocity < 0 && position < leftEdge)) {
             hittingEdgeLeft = true;
             forces.push(spring * (leftEdge - position)); // force of spring
-            forces.push(damping * -velocity); // force of damper
           }
+
+          if (hittingEdgeRight || hittingEdgeLeft) forces.push(damping * -velocity); // force of damper
 
           acceleration = forces.reduce((sum, x) => sum + x, 0) / mass;
           const newVelocity = velocity + (acceleration * timeDelta);
+
+          if (hittingEdgeRight || hittingEdgeLeft && newVelocity * velocity <= 0) {
+            occilationAmplitude =  Math.abs((hittingEdgeRight ? rightEdge : leftEdge) - position);
+          }
+
           velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
+          if (occilationAmplitude < 0.5) velocity = 0;
           position += toPixels(velocity * timeDelta);
         }
 
@@ -147,6 +158,8 @@
         speedDOM.innerHTML = velocity.toFixed(2);
 
 
+        cursorLast.x = cursor.x;
+        cursorLast.y = cursor.y;
         rafLast = time;
         raf = window.requestAnimationFrame(updatePosition);
       }
