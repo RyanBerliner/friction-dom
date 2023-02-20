@@ -29,19 +29,24 @@
       const track = document.querySelector('div');
       const speedDOM = document.getElementById('speed');
 
+      const pixelsInMeter = 526; // === 1 meter (cause 40px kinda looks like a hockey puck from my perspective of a webpage)
+      function toMeters(px) { return px / pixelsInMeter };
+      function toPixels(meters) { return meters * pixelsInMeter };
+      function toSeconds(milli) { return milli / 1000 }; // for verbosity...
+
       // TODO: These three need to be updated on screen size changes
       const leftEdge = 0;
       const rightEdge = track.offsetWidth - puck.offsetWidth;
 
       const mass = 0.17; // kg (this is a hockey puck)
       const friction = 0.15; // (kinetic friction of rubber and ice)
-      const gravity = 9.8; // px/sec/sec
-      const spring = 0.16; // spring constant N/px (will deform 10px if suspending puck vertically)
-      const damping = 5; // N/px/sec damping coefficient
+      const gravity = 9.8; // meters/sec/sec
+      const spring = 0.16; // spring constant N/m
+      const damping = 5; // N/meters/sec damping coefficient
 
-      let acceleration = 0; // px/milli/milli
-      let velocity = 0; // px/milli
-      let position = 0; // px
+      let acceleration = 0; // meters/sec/sev
+      let velocity = 0; // meters/sec
+      let position = 0; // relative position in pixels
 
       let dragging = false;
       let hittingEdgeRight = false;
@@ -104,6 +109,7 @@
       document.addEventListener('touchend', endMove);
 
       function updatePosition(time) {
+        time = toSeconds(time);
         if (!dragging && velocity === 0) return;
         if (!rafStart) rafStart = time;
 
@@ -112,7 +118,7 @@
         if (dragging) {
           const positionDelta = cursor.x - cursorLast.x;
           position += positionDelta;
-          const newVelocity = timeDelta ? positionDelta / timeDelta : 0;
+          const newVelocity = timeDelta ? toMeters(positionDelta) / timeDelta : 0;
           const velocityDelta = newVelocity - velocity;
           velocity = newVelocity;
           acceleration = timeDelta ? velocityDelta / timeDelta : 0;
@@ -131,14 +137,15 @@
             forces.push(damping * -velocity); // force of damper
           }
 
-          acceleration = forces.reduce((sum, x) => sum + x, 0) / mass / 1000;
+          acceleration = forces.reduce((sum, x) => sum + x, 0) / mass;
           const newVelocity = velocity + (acceleration * timeDelta);
           velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
-          position += velocity * timeDelta;
+          position += toPixels(velocity * timeDelta);
         }
 
         puck.style.left = position + 'px';
         speedDOM.innerHTML = velocity.toFixed(2);
+
 
         rafLast = time;
         raf = window.requestAnimationFrame(updatePosition);
