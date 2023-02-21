@@ -43,6 +43,7 @@
       const gravity = 9.8; // meters/sec/sec
       const spring = 0.16; // spring constant N/m
       const damping = 5; // N/meters/sec damping coefficient
+      const pullSpring = 0.16; // spring constant N/m (this is the spring you are dragging with, only active at boundaries)
 
       let acceleration = 0; // meters/sec/sev
       let velocity = 0; // meters/sec
@@ -121,7 +122,12 @@
         const timeDelta = rafLast ? time - rafLast : undefined;
 
         if (dragging) {
-          const positionDelta = cursor.x === undefined || cursorLast.x === undefined ? 0 : cursor.x - cursorLast.x;
+          let pullCoefficient = 1;
+          if (position < leftEdge || position > rightEdge) {
+            pullCoefficient = pullSpring <= spring ? (pullSpring / spring) / 2: 1 - ((spring / pullSpring) / 2);
+          }
+
+          const positionDelta = pullCoefficient * (cursor.x === undefined || cursorLast.x === undefined ? 0 : cursor.x - cursorLast.x);
           position += positionDelta;
           const newVelocity = timeDelta ? toMeters(positionDelta) / timeDelta : 0;
           const velocityDelta = newVelocity - velocity;
@@ -130,12 +136,12 @@
         } else {
           const forces = [friction * (mass * gravity) * (velocity > 0 ? -1 : 1)] // friction is always a thing
 
-          if (hittingEdgeRight || (velocity > 0 && position > rightEdge)) {
+          if (hittingEdgeRight || (velocity >= 0 && position > rightEdge)) {
             hittingEdgeRight = true;
             forces.push(spring * (rightEdge - position)); // force of spring
           }
 
-          if (hittingEdgeLeft || (velocity < 0 && position < leftEdge)) {
+          if (hittingEdgeLeft || (velocity <= 0 && position < leftEdge)) {
             hittingEdgeLeft = true;
             forces.push(spring * (leftEdge - position)); // force of spring
           }
