@@ -109,6 +109,15 @@
         if (!dragging) return;
         dragging = false;
         puck.style.cursor = null;
+
+        if (position < leftEdge) {
+          velocity = 0.00001;
+          hittingEdgeLeft = true;
+        }
+        if (position > rightEdge) {
+          velocity = -0.00001;
+          hittingEdgeRight = true;
+        }
       }
 
       document.addEventListener('mouseup', endMove);
