@@ -44,6 +44,7 @@
       const spring = 0.16; // spring constant N/m
       const damping = 5; // N/meters/sec damping coefficient
       const pullSpring = 0.16; // spring constant N/m (this is the spring you are dragging with, only active at boundaries)
+      const animationOvershoot = 0; // percentage of overshoot for programatic animations. ex: 5 === 5% overshoot
 
       let acceleration = 0; // meters/sec/sev
       let velocity = 0; // meters/sec
@@ -52,7 +53,7 @@
       let dragging = false;
       let hittingEdgeRight = false;
       let hittingEdgeLeft = false;
-      let occilationAmplitude = Infinity;
+      let occilationAmplitudes = [];
 
       const cursor = {x: 0, y: 0};
       const cursorLast = {...cursor};
@@ -62,11 +63,11 @@
       let raf = undefined;
 
       function beginMotion() {
-        rafStart = undefined;
-        rafLast = undefined;
+        rafStart = toSeconds(performance.now());
+        rafLast = toSeconds(performance.now());
         hittingEdgeRight = false;
         hittingEdgeLeft = false;
-        occilationAmplitude = Infinity;
+        occilationAmplitudes = [];
         window.cancelAnimationFrame(raf);
         raf = window.requestAnimationFrame(updatePosition);
       }
@@ -123,12 +124,11 @@
       document.addEventListener('mouseup', endMove);
       document.addEventListener('touchend', endMove);
 
-      function updatePosition(time) {
-        time = toSeconds(time);
-        if (!dragging && velocity === 0) return;
-        if (!rafStart) rafStart = time;
+      function updatePosition() { // intentionally don't use time arg
+        const time = toSeconds(performance.now());
+        const timeDelta = time - rafLast;
 
-        const timeDelta = rafLast ? time - rafLast : undefined;
+        if (!dragging && velocity === 0) return;
 
         if (dragging) {
           let pullCoefficient = 1;
@@ -138,11 +138,13 @@
 
           const positionDelta = pullCoefficient * (cursor.x === undefined || cursorLast.x === undefined ? 0 : cursor.x - cursorLast.x);
           position += positionDelta;
-          const newVelocity = timeDelta ? toMeters(positionDelta) / timeDelta : 0;
+          const newVelocity = toMeters(positionDelta) / timeDelta;
           const velocityDelta = newVelocity - velocity;
           velocity = newVelocity;
-          acceleration = timeDelta ? velocityDelta / timeDelta : 0;
+          acceleration = velocityDelta / timeDelta;
         } else {
+          position += toPixels(velocity * timeDelta);
+
           const forces = [friction * (mass * gravity) * (velocity > 0 ? -1 : 1)] // friction is always a thing
 
           if (hittingEdgeRight || (velocity >= 0 && position > rightEdge)) {
@@ -161,12 +163,21 @@
           const newVelocity = velocity + (acceleration * timeDelta);
 
           if (hittingEdgeRight || hittingEdgeLeft && newVelocity * velocity <= 0) {
-            occilationAmplitude =  Math.abs((hittingEdgeRight ? rightEdge : leftEdge) - position);
+            occilationAmplitudes.push(Math.abs((hittingEdgeRight ? rightEdge : leftEdge) - position));
           }
 
           velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
-          if (occilationAmplitude < 0.5) velocity = 0;
-          position += toPixels(velocity * timeDelta);
+          if (occilationAmplitudes.length >= 5) {
+            let lastIndex = occilationAmplitudes.length - 1;
+            let total = 0;
+            for (let i = occilationAmplitudes.length - 1; i >= occilationAmplitudes.length - 6; i--) {
+              total += occilationAmplitudes[i];
+            }
+
+            if (total / 5 < 0.5) {
+              velocity = 0;
+            }
+          }
         }
 
         puck.style.left = position + 'px';
@@ -179,23 +190,18 @@
         raf = window.requestAnimationFrame(updatePosition);
       }
 
-      // document.querySelector('form').addEventListener('submit', event => {
-      //   event.preventDefault();
-      //   const currentLocation = puck.getBoundingClientRect();
+      document.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();
+        window.cancelAnimationFrame(raf);
 
-      //   const direction = event.submitter.value;
-      //   const diff =  trackLocation[direction.toLowerCase()] - currentLocation[direction.toLowerCase()];
+        let positionDelta = toMeters((event.submitter.value === 'Right' ? rightEdge : leftEdge) - puck.offsetLeft);
+        positionDelta *= (1 + (animationOvershoot / 100));
+        const frictionForce = friction * (mass * gravity);
+        velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
+        velocity *= positionDelta >= 0 ? 1 : -1;
 
-      //   velocity = Math.sqrt(-2 * puckDeccelerationFromFriction * Math.abs(diff));
-      //   if (speed * diff < 0) speed *= -1
-
-      //   window.cancelAnimationFrame(momentumRaf);
-      //   window.cancelAnimationFrame(springRaf);
-
-      //   springRafStart = undefined;
-      //   momentumRafStart = undefined;
-      //   momentumRaf = window.requestAnimationFrame(animateMomentum);
-      // });
+        beginMotion();
+      });
     </script>
   </body>
 </html>
