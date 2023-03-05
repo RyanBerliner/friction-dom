@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction DOM</title>
+    <style>
+      * {box-sizing: border-box;}
+      body {padding: 150px 30px; margin: auto; max-width: 500px; height: 100%; overflow: hidden;}
+      div {border: 1px solid black; position: relative; border-radius: 21px;}
+      #puck {display: block; background: black; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
+      #speed {text-align: center;}
+      form {display: flex; justify-content: space-between;}
+    </style>
+  </head>
+  <body>
+    <div>
+      <span id="puck"></span>
+    </div>
+
+    <p id="speed">0.00</p>
+    <form>
+      <input type="submit" value="Left" />
+      <input type="submit" value="Right" />
+    </form>
+
+    <script>
+      // Start library code
+
+      const gravity = 9.8; // meters/sec/sec
+
+      function toMeters(px, scale) { return px / scale };
+      function toPixels(meters, scale) { return meters * scale };
+      function toSeconds(milli) { return milli / 1000 }; // for verbosity...
+
+      class App {
+        constructor() {
+          this.cursor = {x: 0, y: 0};
+          this.cursorLast = {...this.cursor};
+
+          this.rafStart = undefined;
+          this.rafLast = undefined;
+          this.raf = undefined;
+
+          this.draggingSurfaceObjects = [];
+          this.activeSurfaceObjects = [];
+
+          document.addEventListener('mousemove', this.move.bind(this));
+          document.addEventListener('touchmove', this.move.bind(this));
+
+          document.addEventListener('mouseup', this.endMove.bind(this));
+          document.addEventListener('touchend', this.endMove.bind(this));
+        }
+
+        beginMotion() {
+          this.rafStart = toSeconds(performance.now());
+          this.rafLast = toSeconds(performance.now());
+
+          window.cancelAnimationFrame(this.raf);
+          this.raf = window.requestAnimationFrame(this.updateMotion.bind(this));
+        }
+
+        updateMotion() {
+          console.log('raf');
+          if (this.activeSurfaceObjects.length === 0) return;
+
+          const time = toSeconds(performance.now());
+          const timeDelta = time - this.rafLast;
+
+          for (let i = this.activeSurfaceObjects.length - 1; i >= 0; i--) {
+            this.activeSurfaceObjects[i].updateMotion(timeDelta);
+            if (this.activeSurfaceObjects[i].settled) {
+              this.activeSurfaceObjects.splice(i, 1);
+            }
+          }
+
+          this.cursorLast.x = this.cursor.x;
+          this.cursorLast.y = this.cursor.y;
+
+          this.rafLast = time;
+          this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
+        }
+
+        startMove(event, surfaceObject) {
+          this.draggingSurfaceObjects.push(surfaceObject); // check dupes... maybe?
+          this.activeSurfaceObjects.push(surfaceObject); // check dupes
+
+          if (event.targetTouches) {
+            this.cursor.x = undefined;
+            this.cursor.y = undefined;
+            this.cursorLast.x = undefined;
+            this.cursorLast.y = undefined;
+          } else {
+            this.cursorLast.x = this.cursor.x;
+            this.cursorLast.y = this.cursor.y;
+          }
+
+          this.beginMotion();
+        }
+
+        move(event) {
+          if (event.targetTouches) {
+            const {screenX, screenY} = event.targetTouches[0];
+            this.cursor.x = screenX;
+            this.cursor.y = screenY;
+          } else {
+            this.cursor.x = event.clientX;
+            this.cursor.y = event.clientY;
+          }
+        }
+
+        endMove(event) {
+          for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
+            this.draggingSurfaceObjects[i].endMove(event);
+            this.draggingSurfaceObjects.splice(i, 0);
+          }
+        }
+      }
+
+      const app = new App();
+      window.app = app;
+
+      class Surface {
+        constructor(element, options) {
+          this.element = element;
+          this.options = options;
+        }
+      }
+
+      class SurfaceObject {
+        constructor(element, surface, options) {
+          this.surface = surface;
+          this.element = element;
+          this.options = options;
+
+          this.x = {
+            acceleration: 0, // meters/sec/sec
+            velocity: 0, // meters/sec
+            position: 0, // relative position in pixels
+            settled: true,
+            hittingMin: false,
+            hittingMax: false,
+          };
+
+          this.y = {
+            acceleration: 0, // meters/sec/sec
+            velocity: 0, // meters/sec
+            position: 0, // relative position in pixels
+            settled: true,
+            hittingMin: false,
+            hittingMax: false,
+          };
+
+          this.dragging = false;
+          this.hittingEdgeRight = false;
+          this.hittingEdgeLeft = false;
+          this.occilationAmplitudes = [];
+
+          this.element.addEventListener('mousedown', this.startMove.bind(this));
+          this.element.addEventListener('touchstart', this.startMove.bind(this));
+        }
+
+        get dragging() { return this._dragging; }
+        set dragging(d) {
+          this._dragging = d; this.element.style.cursor = d ? 'grabbing' : 'grab';
+        }
+
+        get positionx() { return this.x.position; }
+        set positionx(p) { this.x.position = p; this.element.style.left = p + 'px'; }
+
+        get positiony() { return this.y.position; }
+        set positiony(p) { this.y.position = p; this.element.style.top = p + 'px'; }
+
+        get settled() { return this.x.settled && this.y.settled; }
+
+        startMove(event) {
+          app.startMove(event, this);
+          this.x.settled = false;
+          this.y.settled = false;
+          this.dragging = true;
+        }
+
+        endMove(event) {
+          this.dragging = false;
+          if (this.x.velocity === 0) this.x.settled = true;
+          if (this.y.velocity === 0) this.y.settled = true;
+        }
+
+        updateMotion(timeDelta) {
+          const { friction, mass } = this.options;
+          const { scale } = this.surface.options;
+
+          const axisCoefficients = {
+            x: (Math.abs(this.x.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
+            y: (Math.abs(this.y.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
+          };
+
+          ['x', 'y'].forEach(axis => {
+            if (this.dragging) {
+              const positionDelta = (app.cursor[axis] === undefined || app.cursorLast[axis] === undefined ? 0 : app.cursor[axis] - app.cursorLast[axis]);
+              this[`position${axis}`] += positionDelta;
+              const newVelocity = toMeters(positionDelta, scale) / timeDelta;
+              const velocityDelta = newVelocity - this[axis].velocity;
+              this[axis].velocity = newVelocity;
+              this[axis].acceleration = velocityDelta / timeDelta;
+            } else {
+              this[`position${axis}`] += toPixels(this[axis].velocity * timeDelta, scale);
+
+              let frictionForce = friction * (mass * gravity) * (this[axis].velocity > 0 ? -1 : 1);
+              frictionForce *= axisCoefficients[axis];
+              const forces = [frictionForce]; // friction is always a thing
+
+              // if (hittingEdgeRight || (velocity >= 0 && position > rightEdge)) {
+              //   hittingEdgeRight = true;
+              //   forces.push(spring * (rightEdge - position)); // force of spring
+              // }
+
+              // if (hittingEdgeLeft || (velocity <= 0 && position < leftEdge)) {
+              //   hittingEdgeLeft = true;
+              //   forces.push(spring * (leftEdge - position)); // force of spring
+              // }
+
+              // if (hittingEdgeRight || hittingEdgeLeft) forces.push(damping * -velocity); // force of damper
+
+              this[axis].acceleration = forces.reduce((sum, x) => sum + x, 0) / mass;
+              const newVelocity = this[axis].velocity + (this[axis].acceleration * timeDelta);
+
+              // if (hittingEdgeRight || hittingEdgeLeft && newVelocity * velocity <= 0) {
+              //   occilationAmplitudes.push(Math.abs((hittingEdgeRight ? rightEdge : leftEdge) - position));
+              // }
+
+              // this.velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
+              if (newVelocity * this[axis].velocity <= 0) this[axis].settled = true;
+              this[axis].velocity = newVelocity * this[axis].velocity <= 0 ? 0 : newVelocity;
+
+              // if (occilationAmplitudes.length >= 5) {
+              //   let lastIndex = occilationAmplitudes.length - 1;
+              //   let total = 0;
+              //   for (let i = occilationAmplitudes.length - 1; i >= occilationAmplitudes.length - 6; i--) {
+              //     total += occilationAmplitudes[i];
+              //   }
+
+              //   if (total / 5 < 0.5) {
+              //     velocity = 0;
+              //   }
+              // }
+            }
+          });
+
+        }
+      }
+
+      // let rafStart = undefined;
+      // let rafLast = undefined;
+      // let raf = undefined;
+
+      // function beginMotion() {
+      //   rafStart = toSeconds(performance.now());
+      //   rafLast = toSeconds(performance.now());
+      //   hittingEdgeRight = false;
+      //   hittingEdgeLeft = false;
+      //   occilationAmplitudes = [];
+      //   window.cancelAnimationFrame(raf);
+      //   raf = window.requestAnimationFrame(updatePosition);
+      // }
+
+      // function startMove(event) {
+      //   tdragging = true;
+      //   puck.style.cursor = 'grabbing';
+
+      //   if (event.targetTouches) {
+      //     cursor.x = undefined;
+      //     cursor.y = undefined;
+      //     cursorLast.x = undefined;
+      //     cursorLast.y = undefined;
+      //   } else {
+      //     cursorLast.x = cursor.x;
+      //     cursorLast.y = cursor.y;
+      //   }
+
+      //   beginMotion();
+      // }
+
+      // function move(event) {
+      //   if (event.targetTouches) {
+      //     const {screenX, screenY} = event.targetTouches[0];
+      //     cursor.x = screenX;
+      //     cursor.y = screenY;
+      //   } else {
+      //     cursor.x = event.clientX;
+      //     cursor.y = event.clientY;
+      //   }
+      // }
+
+      // function endMove(event) {
+      //   if (!dragging) return;
+      //   dragging = false;
+      //   puck.style.cursor = null;
+
+      //   if (position < leftEdge) {
+      //     velocity = 0.00001;
+      //     hittingEdgeLeft = true;
+      //   }
+      //   if (position > rightEdge) {
+      //     velocity = -0.00001;
+      //     hittingEdgeRight = true;
+      //   }
+      // }
+
+      // function updatePosition() { // intentionally don't use time arg
+      //   const time = toSeconds(performance.now());
+      //   const timeDelta = time - rafLast;
+
+      //   if (!dragging && velocity === 0) return;
+
+      //   if (dragging) {
+      //     let pullCoefficient = 1;
+      //     if (position < leftEdge || position > rightEdge) {
+      //       pullCoefficient = pullSpring <= spring ? (pullSpring / spring) / 2: 1 - ((spring / pullSpring) / 2);
+      //     }
+
+      //     const positionDelta = pullCoefficient * (cursor.x === undefined || cursorLast.x === undefined ? 0 : cursor.x - cursorLast.x);
+      //     position += positionDelta;
+      //     const newVelocity = toMeters(positionDelta) / timeDelta;
+      //     const velocityDelta = newVelocity - velocity;
+      //     velocity = newVelocity;
+      //     acceleration = velocityDelta / timeDelta;
+      //   } else {
+      //     position += toPixels(velocity * timeDelta);
+
+      //     const forces = [friction * (mass * gravity) * (velocity > 0 ? -1 : 1)] // friction is always a thing
+
+      //     if (hittingEdgeRight || (velocity >= 0 && position > rightEdge)) {
+      //       hittingEdgeRight = true;
+      //       forces.push(spring * (rightEdge - position)); // force of spring
+      //     }
+
+      //     if (hittingEdgeLeft || (velocity <= 0 && position < leftEdge)) {
+      //       hittingEdgeLeft = true;
+      //       forces.push(spring * (leftEdge - position)); // force of spring
+      //     }
+
+      //     if (hittingEdgeRight || hittingEdgeLeft) forces.push(damping * -velocity); // force of damper
+
+      //     acceleration = forces.reduce((sum, x) => sum + x, 0) / mass;
+      //     const newVelocity = velocity + (acceleration * timeDelta);
+
+      //     if (hittingEdgeRight || hittingEdgeLeft && newVelocity * velocity <= 0) {
+      //       occilationAmplitudes.push(Math.abs((hittingEdgeRight ? rightEdge : leftEdge) - position));
+      //     }
+
+      //     velocity = newVelocity * velocity <= 0 && !(hittingEdgeRight || hittingEdgeLeft) ? 0 : newVelocity;
+      //     if (occilationAmplitudes.length >= 5) {
+      //       let lastIndex = occilationAmplitudes.length - 1;
+      //       let total = 0;
+      //       for (let i = occilationAmplitudes.length - 1; i >= occilationAmplitudes.length - 6; i--) {
+      //         total += occilationAmplitudes[i];
+      //       }
+
+      //       if (total / 5 < 0.5) {
+      //         velocity = 0;
+      //       }
+      //     }
+      //   }
+
+      //   puck.style.left = position + 'px';
+
+      //   cursorLast.x = cursor.x;
+      //   cursorLast.y = cursor.y;
+      //   rafLast = time;
+      //   raf = window.requestAnimationFrame(updatePosition);
+      // }
+
+      // document.querySelector('form').addEventListener('submit', event => {
+      //   event.preventDefault();
+      //   window.cancelAnimationFrame(raf);
+
+      //   let positionDelta = toMeters((event.submitter.value === 'Right' ? rightEdge : leftEdge) - puck.offsetLeft);
+      //   positionDelta *= (1 + (animationOvershoot / 100));
+      //   const frictionForce = friction * (mass * gravity);
+      //   velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
+      //   velocity *= positionDelta >= 0 ? 1 : -1;
+
+      //   beginMotion();
+      // });
+
+      // // End library code
+
+      const track = document.querySelector('div');
+      const puck = document.getElementById('puck');
+
+      const surface = new Surface(track, {
+        scale: 526, // how many px represent 1 meter
+        boundarySpring: 0.16, // spring constant N/m
+        boundarySpringDamping: 5, // N/meters/sec damping coefficient
+        boundaryPullSpring: 0.16, // spring constant N/m
+        overshoot: 0, // percentage of overshoot for programatic animations
+      });
+
+      const object = new SurfaceObject(puck, surface, {
+        mass: 0.17, // kg
+        friction: 0.15, // kinetic friction of rubber and ice
+        // lockX: false,
+        // lockY: true,
+      });
+
+    </script>
+  </body>
+</html>
