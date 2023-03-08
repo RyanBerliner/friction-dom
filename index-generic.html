@@ -7,8 +7,8 @@
     <style>
       * {box-sizing: border-box;}
       body {padding: 150px 30px; margin: auto; max-width: 500px; height: 100%; overflow: hidden;}
-      div {border: 1px solid black; position: relative; border-radius: 21px;}
-      #puck {display: block; background: black; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
+      div {border: 1px solid black; position: relative; border-radius: 21px; height: 100px;}
+      #puck {display: block; background: red; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
       #speed {text-align: center;}
       form {display: flex; justify-content: space-between;}
     </style>
@@ -52,15 +52,18 @@
           document.addEventListener('touchend', this.endMove.bind(this));
         }
 
-        beginMotion() {
+        beginMotion(withObject) {
           this.rafStart = toSeconds(performance.now());
           this.rafLast = toSeconds(performance.now());
+
+          withObject && this.activeSurfaceObjects.push(withObject);
 
           window.cancelAnimationFrame(this.raf);
           this.raf = window.requestAnimationFrame(this.updateMotion.bind(this));
         }
 
         updateMotion() {
+          //console.log('raf');
           if (this.activeSurfaceObjects.length === 0) return;
 
           const time = toSeconds(performance.now());
@@ -214,6 +217,24 @@
           if (this.y.velocity === 0) this.y.settled = true;
         }
 
+        goto(direction) {
+          app.beginMotion(this);
+
+          this.x.settled = false;
+          this.x.hittingMin = false;
+          this.x.hittingMax = false;
+          this.x.occilationAmplitudes = [];
+
+          const { friction, mass } = this.options;
+          const { scale, overshoot } = this.surface.options;
+
+          let positionDelta = toMeters((direction === 'Right' ? this.maxEdge.x : this.minEdge.x) - this.x.position, scale);
+          positionDelta *= (1 + (overshoot / 100));
+          const frictionForce = friction * (mass * gravity);
+          this.x.velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
+          this.x.velocity *= positionDelta >= 0 ? 1 : -1;
+        }
+
         updateMotion(timeDelta) {
           const { friction, mass } = this.options;
           const { scale } = this.surface.options;
@@ -285,20 +306,7 @@
         }
       }
 
-      // document.querySelector('form').addEventListener('submit', event => {
-      //   event.preventDefault();
-      //   window.cancelAnimationFrame(raf);
-
-      //   let positionDelta = toMeters((event.submitter.value === 'Right' ? rightEdge : leftEdge) - puck.offsetLeft);
-      //   positionDelta *= (1 + (animationOvershoot / 100));
-      //   const frictionForce = friction * (mass * gravity);
-      //   velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
-      //   velocity *= positionDelta >= 0 ? 1 : -1;
-
-      //   beginMotion();
-      // });
-
-      // // End library code
+      // End library code
 
       const track = document.querySelector('div');
       const puck = document.getElementById('puck');
@@ -316,6 +324,11 @@
         friction: 0.15, // kinetic friction of rubber and ice
         // lockX: false,
         // lockY: true,
+      });
+
+      document.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();
+        object.goto(event.submitter.value);
       });
 
     </script>
