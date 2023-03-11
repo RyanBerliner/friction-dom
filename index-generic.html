@@ -20,8 +20,12 @@
 
     <p id="speed">0.00</p>
     <form>
-      <input type="submit" value="Left" />
-      <input type="submit" value="Right" />
+      <input type="submit" value="x-min" />
+      <input type="submit" value="y-min" />
+      <input type="submit" value="x-max" />
+      <input type="submit" value="y-max" />
+      <input type="submit" value="y-min,x-min" />
+      <input type="submit" value="y-max,x-max" />
     </form>
 
     <script>
@@ -63,7 +67,6 @@
         }
 
         updateMotion() {
-          //console.log('raf');
           if (this.activeSurfaceObjects.length === 0) return;
 
           const time = toSeconds(performance.now());
@@ -186,10 +189,12 @@
 
         get settled() { return this.x.settled && this.y.settled; }
 
+        get axis() { return this.options.axis.split(','); }
+
         startMove(event) {
           app.startMove(event, this);
 
-          ['x', 'y'].forEach(axis => {
+          this.axis.forEach(axis => {
             this[axis].settled = false;
             this[axis].hittingMin = false;
             this[axis].hittingMax = false;
@@ -202,7 +207,7 @@
         endMove(event) {
           this.dragging = false;
 
-          ['x', 'y'].forEach(axis => {
+          this.axis.forEach(axis => {
             const { position, velocity } = this[axis];
             if (velocity === 0 && position < this.minEdge[axis]) {
               this[axis].velocity = -0.01;
@@ -218,24 +223,42 @@
         }
 
         goto(direction) {
-          app.beginMotion(this);
 
-          this.x.settled = false;
-          this.x.hittingMin = false;
-          this.x.hittingMax = false;
-          this.x.occilationAmplitudes = [];
+          const instructions = {};
+          direction.split(',').forEach(d => {
+            const [axis, bound] = d.split('-');
+            instructions[axis] = bound;
+          });
 
           const { friction, mass } = this.options;
           const { scale, overshoot } = this.surface.options;
-
-          let positionDelta = toMeters((direction === 'Right' ? this.maxEdge.x : this.minEdge.x) - this.x.position, scale);
-          positionDelta *= (1 + (overshoot / 100));
           const frictionForce = friction * (mass * gravity);
-          this.x.velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
-          this.x.velocity *= positionDelta >= 0 ? 1 : -1;
+
+          this.axis.forEach(axis => {
+            const instruction = instructions[axis];
+            if (!instruction) return;
+
+            let positionDelta = toMeters((instruction === 'max' ? this.maxEdge[axis] : this.minEdge[axis]) - this[axis].position, scale);
+            positionDelta *= (1 + (overshoot / 100));
+
+            if (positionDelta === 0) return;
+
+            this[axis].settled = false;
+            this[axis].hittingMin = false;
+            this[axis].hittingMax = false;
+            this[axis].occilationAmplitudes = [];
+
+            this[axis].velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
+            this[axis].velocity *= positionDelta >= 0 ? 1 : -1;
+          });
+
+          if (!this.x.settled || !this.y.settled) {
+            app.beginMotion(this);
+          }
         }
 
         updateMotion(timeDelta) {
+          console.log('this is the raf');
           const { friction, mass } = this.options;
           const { scale } = this.surface.options;
 
@@ -244,7 +267,7 @@
             y: (Math.abs(this.y.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
           };
 
-          ['x', 'y'].forEach(axis => {
+          this.axis.forEach(axis => {
             if (this.dragging) {
               let pullCoefficient = 1;
               if (this[axis].position < this.minEdge[axis] || this[axis].position > this.maxEdge[axis]) {
@@ -322,8 +345,7 @@
       const object = new SurfaceObject(puck, surface, {
         mass: 0.17, // kg
         friction: 0.15, // kinetic friction of rubber and ice
-        // lockX: false,
-        // lockY: true,
+        axis: 'x,y',
       });
 
       document.querySelector('form').addEventListener('submit', event => {
