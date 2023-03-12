@@ -148,7 +148,7 @@
           this.element = element;
           this.options = options;
 
-          this.x = {
+          const axisState = {
             acceleration: 0, // meters/sec/sec
             velocity: 0, // meters/sec
             position: 0, // relative position in pixels
@@ -156,17 +156,10 @@
             hittingMin: false,
             hittingMax: false,
             occilationAmplitudes: [],
-          };
+          }
 
-          this.y = {
-            acceleration: 0, // meters/sec/sec
-            velocity: 0, // meters/sec
-            position: 0, // relative position in pixels
-            settled: true,
-            hittingMin: false,
-            hittingMax: false,
-            occilationAmplitudes: [],
-          };
+          this.x = {...axisState};
+          this.y = {...axisState};
 
           this.dragging = false;
           this.hittingEdgeRight = false;
@@ -201,14 +194,18 @@
 
         get axis() { return this.options.axis.split(','); }
 
+        resetAxis(axis) {
+          this[axis].settled = false;
+          this[axis].hittingMin = false;
+          this[axis].hittingMax = false;
+          this[axis].occilationAmplitudes = [];
+        }
+
         startMove(event) {
           app.startMove(event, this);
 
           this.axis.forEach(axis => {
-            this[axis].settled = false;
-            this[axis].hittingMin = false;
-            this[axis].hittingMax = false;
-            this[axis].occilationAmplitudes = [];
+            this.resetAxis(axis);
           });
 
           this.dragging = true;
@@ -267,10 +264,7 @@
             if (positionDelta === 0) return;
             positionDelta *= (1 + ((overshoot) / 100))
 
-            this[axis].settled = false;
-            this[axis].hittingMin = false;
-            this[axis].hittingMax = false;
-            this[axis].occilationAmplitudes = [];
+            this.resetAxis(axis);
 
             this[axis].velocity = Math.sqrt(2 * ((frictionForce * frictionMultiplier) / mass) * Math.abs(positionDelta));
             this[axis].velocity *= positionDelta >= 0 ? 1 : -1;
