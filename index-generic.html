@@ -158,7 +158,7 @@
           this.maxY = this.element.offsetHeight;
 
           this.surfaceObjects.forEach(obj => {
-            obj.goto(obj.closestSettlePoint());
+            obj.goto(obj.closestSettlePoint(), 0);
           });
         }
 
@@ -284,7 +284,7 @@
           if (this.y.velocity === 0) this.y.settled = true;
         }
 
-        goto(direction) {
+        goto(direction, overshootOverride) {
           const instructions = {};
 
           direction.split(',').forEach(d => {
@@ -293,7 +293,8 @@
           });
 
           const { friction, mass } = this.options;
-          const { scale, overshoot } = this.surface.options;
+          let { scale, overshoot } = this.surface.options;
+          if (overshootOverride !== undefined) overshoot = overshootOverride;
           const frictionForce = friction * (mass * gravity);
 
           const positionParts = new Map();
