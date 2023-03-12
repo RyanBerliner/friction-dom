@@ -29,6 +29,20 @@
     <script>
       // Start library code
 
+      // TODOs
+
+      // need to figure out the api for these first (ie how the user is expected to be able to adjust and think about these things)
+      // - some sort of "settled regions/edges" where the object will return to if it doesn't have enough speed to reach the next one
+      // - handlers/callbacks for when items reach one of the settled regions
+      // - handlers/callbacks for updates between edges (maybe percentage transitioned and pixel value?)
+
+      // some nice to haves for dx
+      // - init and config with data attributes
+      // - access object or surface by referencing dom element
+
+      // is this an antipattern of the concept?
+      // - (maybe) some sort of "boost" to add velocity so items make it to the "settled regions/edges"
+
       const gravity = 9.8; // meters/sec/sec
 
       function toMeters(px, scale) { return px / scale };
