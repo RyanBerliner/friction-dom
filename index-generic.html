@@ -143,6 +143,10 @@
             boundarySpringDamping: 5, // N/meters/sec damping coefficient
             boundaryPullSpring: 0.08, // spring constant N/m
             overshoot: 0, // percentage of overshoot for programatic animations
+            paddingMinX: 0,
+            paddingMinY: 0,
+            paddingMaxX: 0,
+            paddingMaxY: 0,
             ...(options || {}), // allow overriding defaults
           }
 
@@ -152,10 +156,20 @@
         }
 
         setEdges() {
-          this.minX = 0;
-          this.minY = 0;
-          this.maxX = this.element.offsetWidth;
-          this.maxY = this.element.offsetHeight;
+          const { paddingMinX, paddingMinY, paddingMaxX, paddingMaxY } = this.options;
+          this.minX = 0 + paddingMinX;
+          this.minY = 0 + paddingMinY;
+
+          if (this.element === window) {
+            this.maxX = window.innerWidth;
+            this.maxY = window.innerHeight;
+          } else {
+            this.maxX = this.element.offsetWidth;
+            this.maxY = this.element.offsetHeight;
+          }
+
+          this.maxX -= paddingMaxX;
+          this.maxY -= paddingMaxY;
 
           this.surfaceObjects.forEach(obj => {
             obj.goto(obj.closestSettlePoint(), 0);
@@ -178,6 +192,8 @@
           this.surface.surfaceObjects.push(this);
 
           this.element = element;
+          this.element.style.position = surface.element === window ? 'fixed' : 'relative';
+
           this.options = {
             mass: 0.17, // kg
             friction: 0.15, // kinetic friction of rubber and ice
@@ -198,6 +214,9 @@
 
           this.x = {...axisState};
           this.y = {...axisState};
+
+          this.positionx = this.x.position + this.minEdge.x;
+          this.positiony = this.y.position + this.minEdge.y;
 
           this.dragging = false;
 
