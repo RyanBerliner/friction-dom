@@ -138,7 +138,14 @@
       class Surface {
         constructor(element, options) {
           this.element = element;
-          this.options = options;
+          this.options = {
+            scale: 526, // how many px represent 1 meter
+            boundarySpring: 0.16, // spring constant N/m
+            boundarySpringDamping: 5, // N/meters/sec damping coefficient
+            boundaryPullSpring: 0.08, // spring constant N/m
+            overshoot: 0, // percentage of overshoot for programatic animations
+            ...(options || {}), // allow overriding defaults
+          }
         }
       }
 
@@ -146,7 +153,12 @@
         constructor(element, surface, options) {
           this.surface = surface;
           this.element = element;
-          this.options = options;
+          this.options = {
+            mass: 0.17, // kg
+            friction: 0.15, // kinetic friction of rubber and ice
+            axis: 'x,y',
+            ...(options || {}), // allow overriding defaults
+          }
 
           const axisState = {
             acceleration: 0, // meters/sec/sec
@@ -352,19 +364,8 @@
       const track = document.querySelector('div');
       const puck = document.getElementById('puck');
 
-      const surface = new Surface(track, {
-        scale: 526, // how many px represent 1 meter
-        boundarySpring: 0.16, // spring constant N/m
-        boundarySpringDamping: 5, // N/meters/sec damping coefficient
-        boundaryPullSpring: 0.08, // spring constant N/m
-        overshoot: 0, // percentage of overshoot for programatic animations
-      });
-
-      const object = new SurfaceObject(puck, surface, {
-        mass: 0.17, // kg
-        friction: 0.15, // kinetic friction of rubber and ice
-        axis: 'x,y',
-      });
+      const surface = new Surface(track);
+      const object = new SurfaceObject(puck, surface);
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
