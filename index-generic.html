@@ -182,6 +182,7 @@
             mass: 0.17, // kg
             friction: 0.15, // kinetic friction of rubber and ice
             axis: 'x,y',
+            contained: true,
             ...(options || {}), // allow overriding defaults
           }
 
@@ -212,9 +213,11 @@
         }
 
         get maxEdge() {
+          const { contained } = this.options;
+
           return {
-            x: this.surface.maxX - this.element.offsetWidth,
-            y: this.surface.maxY - this.element.offsetHeight,
+            x: this.surface.maxX - (contained ? this.element.offsetWidth : 0),
+            y: this.surface.maxY - (contained ? this.element.offsetHeight : 0),
           };
         }
 
