@@ -136,6 +136,7 @@
       class Surface {
         constructor(element, options) {
           this.element = element;
+          this.surfaceObjects = [];
           this.options = {
             scale: 526, // how many px represent 1 meter
             boundarySpring: 0.16, // spring constant N/m
@@ -144,12 +145,38 @@
             overshoot: 0, // percentage of overshoot for programatic animations
             ...(options || {}), // allow overriding defaults
           }
+
+          this.setEdges();
+
+          window.addEventListener('resize', this.setEdges.bind(this));
         }
+
+        setEdges() {
+          this.minX = 0;
+          this.minY = 0;
+          this.maxX = this.element.offsetWidth;
+          this.maxY = this.element.offsetHeight;
+
+          this.surfaceObjects.forEach(obj => {
+            obj.goto(obj.closestSettlePoint());
+          });
+        }
+
+        get minX() { return this._minX; }
+        set minX(x) { this._minX = x; }
+        get minY() { return this._minY; }
+        set minY(y) { this._minY = y; }
+        get maxX() { return this._maxX; }
+        set maxX(x) { this._maxX = x; }
+        get maxY() { return this._maxY; }
+        set maxY(y) { this._maxY = y; }
       }
 
       class SurfaceObject {
         constructor(element, surface, options) {
           this.surface = surface;
+          this.surface.surfaceObjects.push(this);
+
           this.element = element;
           this.options = {
             mass: 0.17, // kg
@@ -172,21 +199,23 @@
           this.y = {...axisState};
 
           this.dragging = false;
-          this.hittingEdgeRight = false;
-          this.hittingEdgeLeft = false;
-
-          this.minEdge = {
-            x: 0,
-            y: 0,
-          };
-
-          this.maxEdge = {
-            x: this.surface.element.offsetWidth - this.element.offsetWidth,
-            y: this.surface.element.offsetHeight - this.element.offsetHeight,
-          };
 
           this.element.addEventListener('mousedown', this.startMove.bind(this));
           this.element.addEventListener('touchstart', this.startMove.bind(this));
+        }
+
+        get minEdge() {
+          return {
+            x: this.surface.minX,
+            y: this.surface.minY,
+          };
+        }
+
+        get maxEdge() {
+          return {
+            x: this.surface.maxX - this.element.offsetWidth,
+            y: this.surface.maxY - this.element.offsetHeight,
+          };
         }
 
         get dragging() { return this._dragging; }
@@ -219,6 +248,22 @@
           });
 
           this.dragging = true;
+        }
+
+        closestSettlePoint() {
+          const settlePoint = [];
+          this.axis.forEach(axis => {
+            const { position } = this[axis];
+            if (position < this.minEdge[axis]) {
+              settlePoint.push(`${axis}-min`);
+            }
+
+            if (position > this.maxEdge[axis]) {
+              settlePoint.push(`${axis}-max`);
+            }
+          });
+
+          return settlePoint.join(',')
         }
 
         endMove(event) {
