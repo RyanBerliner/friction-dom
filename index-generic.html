@@ -223,8 +223,8 @@
         }
 
         goto(direction) {
-
           const instructions = {};
+
           direction.split(',').forEach(d => {
             const [axis, bound] = d.split('-');
             instructions[axis] = bound;
@@ -234,21 +234,35 @@
           const { scale, overshoot } = this.surface.options;
           const frictionForce = friction * (mass * gravity);
 
+          const positionParts = new Map();
+          this.axis.forEach(axis => {
+            const instruction = instructions[axis];
+            if (!instruction) return;
+            positionParts.set(axis, toMeters((instruction === 'max' ? this.maxEdge[axis] : this.minEdge[axis]) - this[axis].position, scale));
+          });
+
           this.axis.forEach(axis => {
             const instruction = instructions[axis];
             if (!instruction) return;
 
-            let positionDelta = toMeters((instruction === 'max' ? this.maxEdge[axis] : this.minEdge[axis]) - this[axis].position, scale);
-            positionDelta *= (1 + (overshoot / 100));
+            const otherAxis = axis === 'y' ? 'x' : 'y';
+            let positionDelta = positionParts.get(axis);
+            let otherPositionDelta = positionParts.get(otherAxis);
+
+            let frictionMultiplier = 1;
+            if (otherPositionDelta) {
+              frictionMultiplier = Math.abs(positionDelta)/(Math.abs(otherPositionDelta) + Math.abs(positionDelta));
+            }
 
             if (positionDelta === 0) return;
+            positionDelta *= (1 + ((overshoot) / 100))
 
             this[axis].settled = false;
             this[axis].hittingMin = false;
             this[axis].hittingMax = false;
             this[axis].occilationAmplitudes = [];
 
-            this[axis].velocity = Math.sqrt(2 * (frictionForce / mass) * Math.abs(positionDelta));
+            this[axis].velocity = Math.sqrt(2 * ((frictionForce * frictionMultiplier) / mass) * Math.abs(positionDelta));
             this[axis].velocity *= positionDelta >= 0 ? 1 : -1;
           });
 
