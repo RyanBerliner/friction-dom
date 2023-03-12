@@ -416,6 +416,8 @@
 
                 if (total / 5 < 1) {
                   this[axis].velocity = 0;
+                  // set position exactly as it should be on the limit
+                  this[`position${axis}`] = this[axis].hittingMax ? this.maxEdge[axis] : this.minEdge[axis];
                 }
               }
 
