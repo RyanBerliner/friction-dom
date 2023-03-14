@@ -32,7 +32,8 @@
       // TODOs
 
       // need to figure out the api for these first (ie how the user is expected to be able to adjust and think about these things)
-      // - some sort of "settled regions/edges" where the object will return to if it doesn't have enough speed to reach the next one
+      // Q: some sort of "settled regions/edges" where the object will return to if it doesn't have enough speed to reach the next one
+      // A: lets do a "force edge" which just forces the object to always be in contact with an edge (dont specify which edges)
       // - handlers/callbacks for when items reach one of the settled regions
       // - handlers/callbacks for updates between edges (maybe percentage transitioned and pixel value?)
 
@@ -218,6 +219,7 @@
             friction: 0.15, // kinetic friction of rubber and ice
             axis: 'x,y',
             contained: true,
+            floating: true, // is this object allowed to slow in no mans land or does it have to be hitting an edge
             ...(options || {}), // allow overriding defaults
           }
 
@@ -312,21 +314,24 @@
 
           this.axis.forEach(axis => {
             const { position, velocity } = this[axis];
-            if (velocity === 0 && position < this.minEdge[axis]) {
-              this[axis].velocity = -0.01;
-            }
+            const minDiff = position - this.minEdge[axis];
+            const maxDiff = this.maxEdge[axis] - position;
 
-            if (velocity === 0 && position > this.maxEdge[axis]) {
-              this[axis].velocity = 0.01;
-            }
+            if (velocity === 0 && minDiff < 0) this[axis].velocity = -0.01;
+            if (velocity === 0 && maxDiff < 0) this[axis].velocity = 0.01;
+            if (this.options.floating) return;
+
+            // this is where we should be checking for floating criteria
           });
+
 
           if (this.x.velocity === 0) this.x.settled = true;
           if (this.y.velocity === 0) this.y.settled = true;
         }
 
-        goto(direction, overshootOverride) {
+        goto(direction, overshootOverride, justInfo) {
           const instructions = {};
+          const info = {x: null, y: null};
 
           direction.split(',').forEach(d => {
             const [axis, bound] = d.split('-');
@@ -361,26 +366,30 @@
             if (positionDelta === 0) return;
             positionDelta *= (1 + ((overshoot) / 100))
 
-            this.resetAxis(axis);
+            info[axis] = Math.sqrt(2 * ((frictionForce * frictionMultiplier) / mass) * Math.abs(positionDelta));
+            info[axis] *= positionDelta >= 0 ? 1 : -1;
 
-            this[axis].velocity = Math.sqrt(2 * ((frictionForce * frictionMultiplier) / mass) * Math.abs(positionDelta));
-            this[axis].velocity *= positionDelta >= 0 ? 1 : -1;
+            if (!justInfo) {
+              this.resetAxis(axis);
+              this[axis].velocity = info[axis];
+            }
           });
 
-          if (!this.x.settled || !this.y.settled) {
-            app.beginMotion(this);
-          }
+          if (justInfo) return info;
+          if (!this.x.settled || !this.y.settled) app.beginMotion(this);
         }
 
         updateMotion(timeDelta) {
           console.log('this is the raf');
-          const { friction, mass } = this.options;
+          const { friction, mass, floating } = this.options;
           const { scale } = this.surface.options;
 
           const axisCoefficients = {
             x: (Math.abs(this.x.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
             y: (Math.abs(this.y.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
           };
+
+          const {x: minXVelocity} = this.goto('x-max', 0, true);
 
           this.axis.forEach(axis => {
             if (this.dragging) {
@@ -451,11 +460,9 @@
       const track = document.querySelector('div');
       const puck = document.getElementById('puck');
 
-      const surface = new Surface(window, {
-        paddingMinY: () => window.innerHeight - 200,
-      });
+      const surface = new Surface(track);
 
-      const object = new SurfaceObject(puck, surface);
+      const object = new SurfaceObject(puck, surface, {floating: false});
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
