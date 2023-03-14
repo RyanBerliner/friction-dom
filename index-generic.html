@@ -169,10 +169,15 @@
           window.addEventListener('resize', this.setEdges.bind(this));
         }
 
+        getOrCall(variable) {
+          if (typeof(variable) === 'function') return variable();
+          return variable;
+        }
+
         setEdges() {
           const { paddingMinX, paddingMinY, paddingMaxX, paddingMaxY } = this.options;
-          this.minX = 0 + paddingMinX;
-          this.minY = 0 + paddingMinY;
+          this.minX = 0 + this.getOrCall(paddingMinX);
+          this.minY = 0 + this.getOrCall(paddingMinY);
 
           if (this.element === window) {
             this.maxX = window.innerWidth;
@@ -182,8 +187,8 @@
             this.maxY = this.element.offsetHeight;
           }
 
-          this.maxX -= paddingMaxX;
-          this.maxY -= paddingMaxY;
+          this.maxX -= this.getOrCall(paddingMaxX);
+          this.maxY -= this.getOrCall(paddingMaxY);
 
           this.surfaceObjects.forEach(obj => {
             obj.goto(obj.closestSettlePoint(), 0);
@@ -446,7 +451,10 @@
       const track = document.querySelector('div');
       const puck = document.getElementById('puck');
 
-      const surface = new Surface(track);
+      const surface = new Surface(window, {
+        paddingMinY: () => window.innerHeight - 200,
+      });
+
       const object = new SurfaceObject(puck, surface);
 
       document.querySelector('form').addEventListener('submit', event => {
