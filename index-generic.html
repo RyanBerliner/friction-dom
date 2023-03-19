@@ -32,16 +32,14 @@
       // TODOs
 
       // need to figure out the api for these first (ie how the user is expected to be able to adjust and think about these things)
-      // Q: some sort of "settled regions/edges" where the object will return to if it doesn't have enough speed to reach the next one
-      // A: lets do a "force edge" which just forces the object to always be in contact with an edge (dont specify which edges)
-      // - handlers/callbacks for when items reach one of the settled regions
-      // - handlers/callbacks for updates between edges (maybe percentage transitioned and pixel value?)
+      // - handlers/callbacks for when items reach one of the edges (make current edges alway available, callback whenever the change)
+      // - handlers/callbacks for updates between edges (maybe percentage transitioned and pixel value?) (kinda the same as other but different)
 
       // some nice to haves for dx
       // - init and config with data attributes
       // - access object or surface by referencing dom element
 
-      // is this an antipattern of the concept?
+      // is this an antipattern of the concept? (nah i think that the nudgeThreshold is good enough)
       // - (maybe) some sort of "boost" to add velocity so items make it to the "settled regions/edges"
 
       const gravity = 9.8; // meters/sec/sec
