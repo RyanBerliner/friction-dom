@@ -220,8 +220,9 @@
             axis: 'x,y',
             contained: true,
             floating: true, // is this object allowed to slow in no mans land or does it have to be hitting an edge
-                            // this can also be a int representing the percentage threshold on which side to pick
-                            // `floating` is not a good name for this
+                            // true means that the object is allow to float
+                            // otherwise it should be an int representing the theshold as a percentage
+                            // `floating` is not a good name for this, nor is a bool/int combo like this... this of something else
             ...(options || {}), // allow overriding defaults
           }
 
@@ -320,29 +321,20 @@
             const minDiff = position - this.minEdge[axis];
             const maxDiff = this.maxEdge[axis] - position;
 
-            if (velocity === 0 && minDiff < 0) this[axis].velocity = -0.01;
-            if (velocity === 0 && maxDiff < 0) this[axis].velocity = 0.01;
-            if (floating === true) return; // if we are floating don't worry about anything else!
+            let outOfBounds = false;
+            if (velocity === 0 && minDiff < 0) { this[axis].velocity = -0.01; outOfBounds = true; }
+            if (velocity === 0 && maxDiff < 0) { this[axis].velocity = 0.01; outOfBounds = true; }
+            if (floating === true || outOfBounds) return; // if we are floating don't worry about anything else!
 
             const dir = velocity > 0 ? 'max' : 'min';
-            const opDir = dir === 'max' ? 'min' : 'max';
-
             const info = {
               min: this.goto(`${axis}-min`, 0, true),
               max: this.goto(`${axis}-max`, 0, true),
             };
 
-            const neededVelocity = Math.abs(info[dir][axis]);
-
-            if (Math.abs(velocity) < neededVelocity) {
+            if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
               const positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
-              console.log('percentage vs threshold', positionPercentage, floating, positionPercentage < floating);
-
-              if (floating === false) {
-                this[axis].velocity = info[oppoDir][axis];
-              } else {
-                this[axis].velocity = info[positionPercentage < floating ? 'min' : 'max'][axis];
-              }
+              this[axis].velocity = info[positionPercentage < floating ? 'min' : 'max'][axis];
             }
           });
 
@@ -483,7 +475,7 @@
 
       const surface = new Surface(track);
 
-      const object = new SurfaceObject(puck, surface, {floating: 50, axis: 'x'});
+      const object = new SurfaceObject(puck, surface);
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
