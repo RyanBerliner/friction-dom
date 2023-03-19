@@ -220,6 +220,8 @@
             axis: 'x,y',
             contained: true,
             floating: true, // is this object allowed to slow in no mans land or does it have to be hitting an edge
+                            // this can also be a int representing the percentage threshold on which side to pick
+                            // `floating` is not a good name for this
             ...(options || {}), // allow overriding defaults
           }
 
@@ -310,6 +312,7 @@
         }
 
         endMove(event) {
+          const { floating } = this.options;
           this.dragging = false;
 
           this.axis.forEach(axis => {
@@ -319,11 +322,29 @@
 
             if (velocity === 0 && minDiff < 0) this[axis].velocity = -0.01;
             if (velocity === 0 && maxDiff < 0) this[axis].velocity = 0.01;
-            if (this.options.floating) return;
+            if (floating === true) return; // if we are floating don't worry about anything else!
 
-            // this is where we should be checking for floating criteria
+            const dir = velocity > 0 ? 'max' : 'min';
+            const opDir = dir === 'max' ? 'min' : 'max';
+
+            const info = {
+              min: this.goto(`${axis}-min`, 0, true),
+              max: this.goto(`${axis}-max`, 0, true),
+            };
+
+            const neededVelocity = Math.abs(info[dir][axis]);
+
+            if (Math.abs(velocity) < neededVelocity) {
+              const positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
+              console.log('percentage vs threshold', positionPercentage, floating, positionPercentage < floating);
+
+              if (floating === false) {
+                this[axis].velocity = info[oppoDir][axis];
+              } else {
+                this[axis].velocity = info[positionPercentage < floating ? 'min' : 'max'][axis];
+              }
+            }
           });
-
 
           if (this.x.velocity === 0) this.x.settled = true;
           if (this.y.velocity === 0) this.y.settled = true;
@@ -462,7 +483,7 @@
 
       const surface = new Surface(track);
 
-      const object = new SurfaceObject(puck, surface, {floating: false});
+      const object = new SurfaceObject(puck, surface, {floating: 50, axis: 'x'});
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
