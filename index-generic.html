@@ -219,10 +219,7 @@
             friction: 0.15, // kinetic friction of rubber and ice
             axis: 'x,y',
             contained: true,
-            floating: true, // is this object allowed to slow in no mans land or does it have to be hitting an edge
-                            // true means that the object is allow to float
-                            // otherwise it should be an int representing the theshold as a percentage
-                            // `floating` is not a good name for this, nor is a bool/int combo like this... this of something else
+            nudgeThreshold: 0, // at what threshold should we nugle the object to an edge (don't let it floa)
             ...(options || {}), // allow overriding defaults
           }
 
@@ -313,7 +310,7 @@
         }
 
         endMove(event) {
-          const { floating } = this.options;
+          const { nudgeThreshold } = this.options;
           this.dragging = false;
 
           this.axis.forEach(axis => {
@@ -324,7 +321,7 @@
             let outOfBounds = false;
             if (velocity === 0 && minDiff < 0) { this[axis].velocity = -0.01; outOfBounds = true; }
             if (velocity === 0 && maxDiff < 0) { this[axis].velocity = 0.01; outOfBounds = true; }
-            if (floating === true || outOfBounds) return; // if we are floating don't worry about anything else!
+            if (nudgeThreshold === 0 || outOfBounds) return; // if we are allowed to float don't worry about anything else!
 
             const dir = velocity > 0 ? 'max' : 'min';
             const info = {
@@ -334,7 +331,7 @@
 
             if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
               const positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
-              this[axis].velocity = info[positionPercentage < floating ? 'min' : 'max'][axis];
+              this[axis].velocity = info[positionPercentage < nudgeThreshold ? 'min' : 'max'][axis];
             }
           });
 
@@ -394,7 +391,7 @@
 
         updateMotion(timeDelta) {
           console.log('this is the raf');
-          const { friction, mass, floating } = this.options;
+          const { friction, mass } = this.options;
           const { scale } = this.surface.options;
 
           const axisCoefficients = {
