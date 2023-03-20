@@ -32,8 +32,9 @@
       // TODOs
 
       // need to figure out the api for these first (ie how the user is expected to be able to adjust and think about these things)
-      // - handlers/callbacks for when items reach one of the edges (make current edges alway available, callback whenever the change)
       // - handlers/callbacks for updates between edges (maybe percentage transitioned and pixel value?) (kinda the same as other but different)
+      //   i think this can be something like addMotionListener or onMotion with an absolute position in px and one in percentage
+      //   can we combine all the callbacks into one and just pass the boundary and axis info in the arg? would that be a better dx?
 
       // some nice to haves for dx
       // - init and config with data attributes
@@ -241,6 +242,13 @@
 
           this.element.addEventListener('mousedown', this.startMove.bind(this));
           this.element.addEventListener('touchstart', this.startMove.bind(this));
+
+          this.boundaryCallbacks = {
+            'x-min': [],
+            'x-max': [],
+            'y-min': [],
+            'y-max': [],
+          };
         }
 
         get minEdge() {
@@ -328,8 +336,13 @@
             };
 
             if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
-              const positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
-              this[axis].velocity = info[positionPercentage < nudgeThreshold ? 'min' : 'max'][axis];
+              let positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
+              // this is not working properly, we need to know which edge the item started 
+              // closest to in order to know which to snap back to
+              const closestEdge = positionPercentage > 50 ? 'max' : 'min';
+              const opClosestEdge = positionPercentage <= 50 ? 'max' : 'min';
+              positionPercentage = positionPercentage > 50 ? 100 - positionPercentage : positionPercentage;
+              this[axis].velocity = info[positionPercentage < nudgeThreshold ? closestEdge : opClosestEdge][axis];
             }
           });
 
@@ -423,11 +436,13 @@
               const forces = [frictionForce]; // friction is always a thing
 
               if (this[axis].hittingMax || (this[axis].velocity >= 0 && this[axis].position > this.maxEdge[axis])) {
+                if (!this[axis].hittingMax) this.callBoundaryCallbacks(`${axis}-max`);
                 this[axis].hittingMax = true;
                 forces.push(this.surface.options.boundarySpring * (this.maxEdge[axis] - this[axis].position)); // force of spring
               }
 
               if (this[axis].hittingMin || (this[axis].velocity <= 0 && this[axis].position < this.minEdge[axis])) {
+                if (!this[axis].hittingMin) this.callBoundaryCallbacks(`${axis}-min`);
                 this[axis].hittingMin = true;
                 forces.push(this.surface.options.boundarySpring * (this.minEdge[axis] - this[axis].position)); // force of spring
               }
@@ -461,6 +476,16 @@
             }
           });
         }
+
+        // add a callback to be called when a boundary is hit
+        onBoundaryContact(boundary, fn) {
+          this.boundaryCallbacks[boundary].push(fn);
+        }
+
+        // internal func
+        callBoundaryCallbacks(boundary) {
+          this.boundaryCallbacks[boundary].forEach(fn => fn());
+        }
       }
 
       // End library code
@@ -471,6 +496,10 @@
       const surface = new Surface(track);
 
       const object = new SurfaceObject(puck, surface);
+      object.onBoundaryContact('x-min', () => console.log('we have hit the x min boundary!'));
+      object.onBoundaryContact('x-max', () => console.log('we have hit the x max boundary!'));
+      object.onBoundaryContact('y-min', () => console.log('we have hit the y min boundary!'));
+      object.onBoundaryContact('y-max', () => console.log('we have hit the y max boundary!'));
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
