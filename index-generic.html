@@ -207,6 +207,8 @@
 
       class SurfaceObject {
         constructor(element, surface, options) {
+          this.positionCallbacks = [];
+
           this.surface = surface;
           this.surface.surfaceObjects.push(this);
 
@@ -273,10 +275,10 @@
         }
 
         get positionx() { return this.x.position; }
-        set positionx(p) { this.x.position = p; this.element.style.left = p + 'px'; }
+        set positionx(p) { this.x.position = p; this.element.style.left = p + 'px'; this.callPositionCallbacks(); }
 
         get positiony() { return this.y.position; }
-        set positiony(p) { this.y.position = p; this.element.style.top = p + 'px'; }
+        set positiony(p) { this.y.position = p; this.element.style.top = p + 'px'; this.callPositionCallbacks(); }
 
         get settled() { return this.x.settled && this.y.settled; }
 
@@ -477,14 +479,27 @@
           });
         }
 
+        onPositionChange(fn) {
+          this.positionCallbacks.push(fn);
+        }
+
         // add a callback to be called when a boundary is hit
         onBoundaryContact(boundary, fn) {
           this.boundaryCallbacks[boundary].push(fn);
         }
 
-        // internal func
+        // internal funcs
+
         callBoundaryCallbacks(boundary) {
           this.boundaryCallbacks[boundary].forEach(fn => fn());
+        }
+
+        callPositionCallbacks() {
+          const x = this.x.position;
+          const y = this.y.position;
+          const xd = this.maxEdge.x - this.minEdge.x;
+          const yd = this.maxEdge.y - this.minEdge.y;
+          this.positionCallbacks.forEach(fn => fn({x, y, xp: x / xd, yp: y / yd}));
         }
       }
 
@@ -500,6 +515,7 @@
       object.onBoundaryContact('x-max', () => console.log('we have hit the x max boundary!'));
       object.onBoundaryContact('y-min', () => console.log('we have hit the y min boundary!'));
       object.onBoundaryContact('y-max', () => console.log('we have hit the y max boundary!'));
+      object.onPositionChange(data => console.log('this position has changed', data));
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
