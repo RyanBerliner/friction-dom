@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction DOM</title>
+    <style>
+      html, body {background-color: black; margin: 0; padding: 0; overflow: hidden;}
+      * {box-sizing: border-box;}
+      .dialog {
+        background-color: white;
+        width: 100%;
+        height: 100vh;
+        padding: 20px;
+        text-align: center;
+      }
+      main {
+        background-color: white;
+        min-height: 100vh;
+        padding: 20px;
+        text-align: center;
+        transform-origin: center 10;
+      }
+    </style>
+  </head>
+  <body>
+    <main>this is the main content</main>
+    <div class="dialog">This is the dialog, slide me up</div>
+
+    <script src="../../../dist/friction-dom.js"></script>
+    <script>
+      const dom = document.querySelector('div');
+      const main = document.querySelector('main');
+
+      const surface = new FrictionDOM.Surface(window, {
+        boundarySpringDamping: 5,
+        paddingMaxY: 60,
+        paddingMinY: () => window.innerHeight * 0.07,
+      });
+
+      const object = new FrictionDOM.SurfaceObject(dom, surface, {
+        friction: 0.5,
+        nudgeThreshold: 50,
+        axis: 'y',
+        contained: false,
+      });
+
+      object.onPositionChange(data => {
+        const {yp} = data;
+        const amount = (1 - yp) * .07;
+        const rad = (1 - yp) * 10;
+        const op = (1 - yp) * 0.1;
+        const bs = (1 - yp) * 0.2;
+
+        main.style.transform = `scale(${1 - amount})`;
+        main.style.borderRadius = `${rad}px`;
+        main.style.opacity = 1 - op;
+        dom.style.boxShadow = `0 0 10px rgba(0, 0, 0, ${bs})`;
+        dom.style.borderRadius = `${rad}px`;
+      });
+    </script>
+  </body>
+</html>

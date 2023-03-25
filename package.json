@@ -1,0 +1,35 @@
+{
+  "name": "friction-dom",
+  "version": "0.0.0",
+  "description": "Treat DOM elements like objects sliding around on the page",
+  "main": "dist/friction-dom.js",
+  "module": "dist/friction-dom.esm.js",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist",
+    "src/lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RyanBerliner/friction-dom.git"
+  },
+  "keywords": [
+    "animation",
+    "motion",
+    "javascript"
+  ],
+  "author": "Ryan Berliner",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RyanBerliner/friction-dom/issues"
+  },
+  "homepage": "https://github.com/RyanBerliner/friction-dom#readme",
+  "devDependencies": {
+    "rollup": "^3.20.2"
+  }
+}
