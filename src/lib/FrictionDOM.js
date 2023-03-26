@@ -60,6 +60,8 @@ export class FrictionDOM {
   }
 
   startMove(event, surfaceObject) {
+    event.preventDefault();
+
     this.addDraggingSurfaceObjects(surfaceObject);
     this.addActiveSurfaceObject(surfaceObject);
 

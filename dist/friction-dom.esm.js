@@ -120,6 +120,8 @@ class FrictionDOM {
   }
 
   startMove(event, surfaceObject) {
+    event.preventDefault();
+
     this.addDraggingSurfaceObjects(surfaceObject);
     this.addActiveSurfaceObject(surfaceObject);
 
@@ -195,8 +197,8 @@ class SurfaceObject {
 
     this.dragging = false;
 
-    this.element.addEventListener('mousedown', this.startMove.bind(this));
-    this.element.addEventListener('touchstart', this.startMove.bind(this));
+    this.element.addEventListener('mousedown', this.startMove.bind(this), true);
+    this.element.addEventListener('touchstart', this.startMove.bind(this), true);
 
     this.boundaryCallbacks = {
       'x-min': [],
@@ -290,6 +292,12 @@ class SurfaceObject {
         max: this.goto(`${axis}-max`, 0, true),
       };
 
+      // TODO: mabe don't overshhot here?
+      const infoWithOvershoot = {
+        min: this.goto(`${axis}-min`, undefined, true),
+        max: this.goto(`${axis}-max`, undefined, true),
+      };
+
       if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
         let positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
         // this is not working properly, we need to know which edge the item started 
@@ -297,7 +305,7 @@ class SurfaceObject {
         const closestEdge = positionPercentage > 50 ? 'max' : 'min';
         const opClosestEdge = positionPercentage <= 50 ? 'max' : 'min';
         positionPercentage = positionPercentage > 50 ? 100 - positionPercentage : positionPercentage;
-        this[axis].velocity = info[positionPercentage < nudgeThreshold ? closestEdge : opClosestEdge][axis];
+        this[axis].velocity = infoWithOvershoot[positionPercentage < nudgeThreshold ? closestEdge : opClosestEdge][axis];
       }
     });
 
@@ -430,6 +438,7 @@ class SurfaceObject {
 
   onPositionChange(fn) {
     this.positionCallbacks.push(fn);
+    this.callPositionCallbacks();
   }
 
   // add a callback to be called when a boundary is hit
