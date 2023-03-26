@@ -175,7 +175,8 @@ class SurfaceObject {
       friction: 0.15, // kinetic friction of rubber and ice
       axis: 'x,y',
       contained: true,
-      nudgeThreshold: 0, // at what threshold should we nugle the object to an edge (don't let it float)
+      nudgeThreshold: 0, // at what threshold should we nudge the object to an edge (don't let it float)
+      additionalHandles: [], // more elements you can click/touch to move object
       ...(options || {}), // allow overriding defaults
     };
 
@@ -247,6 +248,8 @@ class SurfaceObject {
   }
 
   startMove(event) {
+    if ([this.element, ...this.options.additionalHandles].indexOf(event.target) < 0) return;
+
     app.startMove(event, this);
 
     this.axis.forEach(axis => {
@@ -292,12 +295,6 @@ class SurfaceObject {
         max: this.goto(`${axis}-max`, 0, true),
       };
 
-      // TODO: mabe don't overshhot here?
-      const infoWithOvershoot = {
-        min: this.goto(`${axis}-min`, undefined, true),
-        max: this.goto(`${axis}-max`, undefined, true),
-      };
-
       if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
         let positionPercentage = ((this[axis].position - this.minEdge[axis]) / (this.maxEdge[axis] - this.minEdge[axis])) * 100;
         // this is not working properly, we need to know which edge the item started 
@@ -305,7 +302,7 @@ class SurfaceObject {
         const closestEdge = positionPercentage > 50 ? 'max' : 'min';
         const opClosestEdge = positionPercentage <= 50 ? 'max' : 'min';
         positionPercentage = positionPercentage > 50 ? 100 - positionPercentage : positionPercentage;
-        this[axis].velocity = infoWithOvershoot[positionPercentage < nudgeThreshold ? closestEdge : opClosestEdge][axis];
+        this[axis].velocity = info[positionPercentage < nudgeThreshold ? closestEdge : opClosestEdge][axis];
       }
     });
 
@@ -391,7 +388,7 @@ class SurfaceObject {
         this[`position${axis}`] += toPixels(this[axis].velocity * timeDelta, scale);
 
         let frictionForce = friction * (mass * gravity) * (this[axis].velocity > 0 ? -1 : 1);
-        frictionForce *= axisCoefficients[axis]; // friction is inline with vector magnitude, so we need to adjust
+        frictionForce *= (isNaN(axisCoefficients[axis])) ? 0 : axisCoefficients[axis]; // friction is inline with vector magnitude, so we need to adjust
 
         const forces = [frictionForce]; // friction is always a thing
 

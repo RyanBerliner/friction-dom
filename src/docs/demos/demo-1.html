@@ -32,7 +32,7 @@
       const puck = document.getElementById('puck');
 
       const surface = new FrictionDOM.Surface(track);
-      const object = new FrictionDOM.SurfaceObject(puck, surface);
+      const object = new FrictionDOM.SurfaceObject(puck, surface, {contained: false, axis: 'x,y'});
 
       document.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();

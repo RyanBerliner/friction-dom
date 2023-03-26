@@ -79,7 +79,16 @@
         I'm peeing in this empty can. [exits Andy's office smiling] All I need is Kevin. Dude buys more cookies than everyone combined and then some. [Kevin waves at him] When I first started selling cookies he was a relatively thin man. Not a thin man, mind you. Relatively thin. And Filipino. But we’ll break that to her later. Hey Michael. You have to use chains?
       </p>
     </main>
-    <div class="dialog">This is the dialog, slide me up</div>
+
+    <div class="dialog">
+      <p style="margin-top: 0;">
+        This is the dialog, slide me up
+      </p>
+      <label>
+        This is an input
+        <input />
+      </label>
+    </div>
 
     <script src="../../../dist/friction-dom.js"></script>
     <script>
@@ -88,18 +97,17 @@
       const span = document.querySelector('span');
 
       const surface = new FrictionDOM.Surface(window, {
-        boundarySpring: 0.16,
-        boundarySpringDamping: 5,
-        overshoot: 150,
         paddingMaxY: 60,
         paddingMinY: () => window.innerHeight * 0.04,
       });
 
       const object = new FrictionDOM.SurfaceObject(dom, surface, {
-        friction: 0.3,
         nudgeThreshold: 50,
         axis: 'y',
         contained: false,
+        additionalHandles: [
+          dom.querySelector('p'),
+        ]
       });
 
       object.onPositionChange(data => {
