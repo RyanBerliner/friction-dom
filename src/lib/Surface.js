@@ -2,6 +2,7 @@ export class Surface {
   constructor(element, options) {
     this.element = element;
     this.surfaceObjects = [];
+    this.resizeTimeout;
     this.options = {
       scale: 526, // how many px represent 1 meter
       boundarySpring: 0.16, // spring constant N/m
@@ -17,7 +18,14 @@ export class Surface {
 
     this.setEdges();
 
-    window.addEventListener('resize', this.setEdges.bind(this));
+    window.addEventListener('resize', this.resizeListener.bind(this));
+  }
+
+  resizeListener() {
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.setEdges();
+    }, 500);
   }
 
   getOrCall(variable) {
@@ -42,7 +50,7 @@ export class Surface {
     this.maxY -= this.getOrCall(paddingMaxY);
 
     this.surfaceObjects.forEach(obj => {
-      obj.goto(obj.closestSettlePoint(), 0);
+      obj.goto(obj.closestSettlePoint(), 0, false, true);
     });
   }
 

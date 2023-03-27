@@ -104,11 +104,13 @@ export class SurfaceObject {
     const settlePoint = [];
     this.axis.forEach(axis => {
       const { position } = this[axis];
-      if (position < this.minEdge[axis]) {
+      const delta = this.maxEdge[axis] - this.minEdge[axis];
+      const percentage = (position - this.minEdge[axis]) / delta;
+      if (position < this.minEdge[axis] || percentage <= 0.5) {
         settlePoint.push(`${axis}-min`);
       }
 
-      if (position > this.maxEdge[axis]) {
+      if (position > this.maxEdge[axis] || percentage > 0.5) {
         settlePoint.push(`${axis}-max`);
       }
     });
@@ -151,7 +153,7 @@ export class SurfaceObject {
     if (this.y.velocity === 0) this.y.settled = true;
   }
 
-  goto(direction, overshootOverride, justInfo) {
+  goto(direction, overshootOverride, justInfo, instant) {
     const instructions = {};
     const info = {x: null, y: null};
 
@@ -193,7 +195,13 @@ export class SurfaceObject {
 
       if (!justInfo) {
         this.resetAxis(axis);
-        this[axis].velocity = info[axis];
+
+        if (instant) {
+          this[axis].position += toPixels(positionDelta, scale);
+          this[axis].velocity = 0
+        } else {
+          this[axis].velocity = info[axis];
+        }
       }
     });
 

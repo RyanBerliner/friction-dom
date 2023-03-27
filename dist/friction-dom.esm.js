@@ -2,6 +2,7 @@ class Surface {
   constructor(element, options) {
     this.element = element;
     this.surfaceObjects = [];
+    this.resizeTimeout;
     this.options = {
       scale: 526, // how many px represent 1 meter
       boundarySpring: 0.16, // spring constant N/m
@@ -17,7 +18,14 @@ class Surface {
 
     this.setEdges();
 
-    window.addEventListener('resize', this.setEdges.bind(this));
+    window.addEventListener('resize', this.resizeListener.bind(this));
+  }
+
+  resizeListener() {
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.setEdges();
+    }, 500);
   }
 
   getOrCall(variable) {
@@ -42,7 +50,7 @@ class Surface {
     this.maxY -= this.getOrCall(paddingMaxY);
 
     this.surfaceObjects.forEach(obj => {
-      obj.goto(obj.closestSettlePoint(), 0);
+      obj.goto(obj.closestSettlePoint(), 0, false, true);
     });
   }
 
@@ -263,11 +271,13 @@ class SurfaceObject {
     const settlePoint = [];
     this.axis.forEach(axis => {
       const { position } = this[axis];
-      if (position < this.minEdge[axis]) {
+      const delta = this.maxEdge[axis] - this.minEdge[axis];
+      const percentage = (position - this.minEdge[axis]) / delta;
+      if (position < this.minEdge[axis] || percentage <= 0.5) {
         settlePoint.push(`${axis}-min`);
       }
 
-      if (position > this.maxEdge[axis]) {
+      if (position > this.maxEdge[axis] || percentage > 0.5) {
         settlePoint.push(`${axis}-max`);
       }
     });
@@ -310,7 +320,7 @@ class SurfaceObject {
     if (this.y.velocity === 0) this.y.settled = true;
   }
 
-  goto(direction, overshootOverride, justInfo) {
+  goto(direction, overshootOverride, justInfo, instant) {
     const instructions = {};
     const info = {x: null, y: null};
 
@@ -352,7 +362,13 @@ class SurfaceObject {
 
       if (!justInfo) {
         this.resetAxis(axis);
-        this[axis].velocity = info[axis];
+
+        if (instant) {
+          this[axis].position += toPixels(positionDelta, scale);
+          this[axis].velocity = 0;
+        } else {
+          this[axis].velocity = info[axis];
+        }
       }
     });
 
