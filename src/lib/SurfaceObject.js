@@ -18,6 +18,7 @@ export class SurfaceObject {
       contained: true,
       nudgeThreshold: 0, // at what threshold should we nudge the object to an edge (don't let it float)
       additionalHandles: [], // more elements you can click/touch to move object
+      initialPosition: 'x-min,y-min',
       ...(options || {}), // allow overriding defaults
     }
 
@@ -48,6 +49,8 @@ export class SurfaceObject {
       'y-min': [],
       'y-max': [],
     };
+
+    this.goto(this.options.initialPosition, 0, false, true);
   }
 
   get minEdge() {
