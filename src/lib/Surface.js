@@ -1,6 +1,6 @@
 export class Surface {
   constructor(element, options) {
-    this.element = element;
+    this.element = element; // dom element, window, or [[min x, max x], [min y, max y]]
     this.surfaceObjects = [];
     this.resizeTimeout;
     this.options = {
@@ -35,17 +35,27 @@ export class Surface {
 
   setEdges() {
     const { paddingMinX, paddingMinY, paddingMaxX, paddingMaxY } = this.options;
-    this.minX = 0 + this.getOrCall(paddingMinX);
-    this.minY = 0 + this.getOrCall(paddingMinY);
 
-    if (this.element === window) {
-      this.maxX = window.innerWidth;
-      this.maxY = window.innerHeight;
+    if (Array.isArray(this.element)) {
+      this.minX = this.element[0][0];
+      this.maxX = this.element[0][1];
+      this.minY = this.element[1][0];
+      this.maxY = this.element[1][1];
     } else {
-      this.maxX = this.element.offsetWidth;
-      this.maxY = this.element.offsetHeight;
+      this.minX = 0;
+      this.minY = 0;
+
+      if (this.element === window) {
+        this.maxX = window.innerWidth;
+        this.maxY = window.innerHeight;
+      } else {
+        this.maxX = this.element.offsetWidth;
+        this.maxY = this.element.offsetHeight;
+      }
     }
 
+    this.minX += this.getOrCall(paddingMinX);
+    this.minY += this.getOrCall(paddingMinY);
     this.maxX -= this.getOrCall(paddingMaxX);
     this.maxY -= this.getOrCall(paddingMaxY);
 
@@ -53,13 +63,4 @@ export class Surface {
       obj.goto(obj.closestSettlePoint(), 0, false, true);
     });
   }
-
-  get minX() { return this._minX; }
-  set minX(x) { this._minX = x; }
-  get minY() { return this._minY; }
-  set minY(y) { this._minY = y; }
-  get maxX() { return this._maxX; }
-  set maxX(x) { this._maxX = x; }
-  get maxY() { return this._maxY; }
-  set maxY(y) { this._maxY = y; }
 }

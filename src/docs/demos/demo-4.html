@@ -97,6 +97,7 @@
       const span = document.querySelector('span');
 
       const surface = new FrictionDOM.Surface(window, {
+        boundarySpringDamping: 7,
         paddingMaxY: 60,
         paddingMinY: () => window.innerHeight * 0.04,
       });
@@ -154,6 +155,13 @@
       // whenever your scroll (shows/hides address bar)
 
       // should also allow initializing in either the min or max
+
+      // what if instead of doing a surface defined by a container, you supply a range of values
+      // then you can intuitively have dragging change properties like width or height, instead of top or left
+      // could you layer a motion and an height width at the same time? at the very least use a container around it?
+      // don't want it to be overwhelming
+
+      // do we want to move the scroll blocking to the library? is this always going to be wanted? make it an option?
     </script>
   </body>
 </html>

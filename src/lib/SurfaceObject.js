@@ -15,6 +15,8 @@ export class SurfaceObject {
       mass: 0.17, // kg
       friction: 0.15, // kinetic friction of rubber and ice
       axis: 'x,y',
+      xProp: 'left',
+      yProp: 'top',
       contained: true,
       nudgeThreshold: 0, // at what threshold should we nudge the object to an edge (don't let it float)
       additionalHandles: [], // more elements you can click/touch to move object
@@ -75,10 +77,10 @@ export class SurfaceObject {
   }
 
   get positionx() { return this.x.position; }
-  set positionx(p) { this.x.position = p; this.element.style.left = p + 'px'; this.callPositionCallbacks(); }
+  set positionx(p) { this.x.position = p; this.element.style[this.options.xProp] = p + 'px'; this.callPositionCallbacks(); }
 
   get positiony() { return this.y.position; }
-  set positiony(p) { this.y.position = p; this.element.style.top = p + 'px'; this.callPositionCallbacks(); }
+  set positiony(p) { this.y.position = p; this.element.style[this.options.yProp] = p + 'px'; this.callPositionCallbacks(); }
 
   get settled() { return this.x.settled && this.y.settled; }
 
