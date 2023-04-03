@@ -1,3 +1,5 @@
+import typescript from '@rollup/plugin-typescript';
+
 const config = {
   sourcemap: true,
 };
@@ -13,12 +15,11 @@ const esmConfig = {
   format: 'esm',
 };
 
-const OUTPUT = 'dist/friction-dom';
-
 export default {
-  input: 'src/lib/index.js',
+  input: 'src/lib/index.ts',
   output: [
-    {...umdConfig, file: `${OUTPUT}.js`},
-    {...esmConfig, file: `${OUTPUT}.esm.js`},
+    {...umdConfig, file: `dist/umd/index.js`},
+    {...esmConfig, file: `dist/esm/index.js`},
   ],
+  plugins: [typescript()],
 };

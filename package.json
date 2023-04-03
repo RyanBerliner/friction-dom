@@ -2,10 +2,14 @@
   "name": "friction-dom",
   "version": "0.0.0",
   "description": "Treat DOM elements like objects sliding around on the page",
-  "main": "dist/friction-dom.js",
-  "module": "dist/friction-dom.esm.js",
+  "main": "dist/umd/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "start": "npm run build:js -- --watch",
+    "build:types": "tsc --declaration --declarationMap --emitDeclarationOnly --outFile dist/types/index.js",
+    "build:js": "rollup -c",
+    "build": "npm run build:js && npm run build:types",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
@@ -21,7 +25,8 @@
   "keywords": [
     "animation",
     "motion",
-    "javascript"
+    "javascript",
+    "typescript"
   ],
   "author": "Ryan Berliner",
   "license": "MIT",
@@ -30,6 +35,9 @@
   },
   "homepage": "https://github.com/RyanBerliner/friction-dom#readme",
   "devDependencies": {
-    "rollup": "^3.20.2"
+    "@rollup/plugin-typescript": "^11.0.0",
+    "rollup": "^3.20.2",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.3"
   }
 }

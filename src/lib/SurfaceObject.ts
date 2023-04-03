@@ -1,8 +1,90 @@
+import { Coordinate } from './types';
 import {app} from './FrictionDOM';
 import {toMeters, toPixels, gravity} from './utils';
+import { Surface } from './Surface';
+
+type Direction = 'x-min,y-min';  // TODO: will need to update this
+type Axis = 'x' | 'y';
+
+type SurfaceObjectOptions = {
+  /**
+   * kg
+   */
+  mass: number,
+  friction: number,
+  axis: Axis | 'x,y' | 'y,x', // IDEA: is a string really the best here?
+  xProp: string,
+  yProp: string,
+  contained: boolean,
+  /**
+   * At what threshold should we nudge the object to an edge
+   */
+  nudgeThreshold: number,
+  /**
+   * More elements you can click/touch to move the object
+   */
+  additionalHandles: Array<HTMLElement>,
+  initialPosition: Direction,
+};
+
+type AxisState = {
+  /**
+   * meters/sec/sec
+   */
+  acceleration: number,
+  /**
+   * meters/sec 
+   */
+  velocity: number,
+  /**
+   * Relative position in pixels
+   */
+  position: number,
+  settled: boolean,
+  hittingMin: boolean,
+  hittingMax: boolean,
+  occilationAmplitudes: Array<number>,
+};
+
+type BoundaryCallbacks = {
+  'x-min': Array<((() => void))>,
+  'x-max': Array<((() => void))>,
+  'y-min': Array<((() => void))>,
+  'y-max': Array<((() => void))>,
+}
+
+type PositionDetails = {
+  /**
+   * x position as absolute pixels
+   */
+  x: number,
+  /**
+   * y position as absolute pixels
+   */
+  y: number,
+  /**
+   * x position as percentage of complete range of motion
+   */
+  xp: number,
+  /**
+   * y position as percentage of complete range of motion
+   */
+  yp: number,
+}
 
 export class SurfaceObject {
-  constructor(element, surface, options) {
+  element: HTMLElement;
+  surface: Surface;
+  options: SurfaceObjectOptions;
+  x: AxisState;
+  y: AxisState;
+
+  boundaryCallbacks: BoundaryCallbacks;
+  positionCallbacks: Array<((details: PositionDetails) => void)>; // fill out
+
+  _dragging: boolean;
+
+  constructor(element: HTMLElement, surface: Surface, options: Partial<SurfaceObjectOptions>) {
     this.positionCallbacks = [];
 
     this.surface = surface;
@@ -12,22 +94,22 @@ export class SurfaceObject {
     this.element.style.position = surface.element === window ? 'fixed' : 'relative';
 
     this.options = {
-      mass: 0.17, // kg
+      mass: 0.17,
       friction: 0.15, // kinetic friction of rubber and ice
       axis: 'x,y',
       xProp: 'left',
       yProp: 'top',
       contained: true,
-      nudgeThreshold: 0, // at what threshold should we nudge the object to an edge (don't let it float)
-      additionalHandles: [], // more elements you can click/touch to move object
+      nudgeThreshold: 0,
+      additionalHandles: [],
       initialPosition: 'x-min,y-min',
-      ...(options || {}), // allow overriding defaults
+      ...(options || {}),
     }
 
-    const axisState = {
-      acceleration: 0, // meters/sec/sec
-      velocity: 0, // meters/sec
-      position: 0, // relative position in pixels
+    const axisState: AxisState = {
+      acceleration: 0,
+      velocity: 0,
+      position: 0,
       settled: true,
       hittingMin: false,
       hittingMax: false,
@@ -55,14 +137,14 @@ export class SurfaceObject {
     this.goto(this.options.initialPosition, 0, false, true);
   }
 
-  get minEdge() {
+  get minEdge(): Coordinate {
     return {
       x: this.surface.minX,
       y: this.surface.minY,
     };
   }
 
-  get maxEdge() {
+  get maxEdge(): Coordinate {
     const { contained } = this.options;
 
     return {
@@ -71,41 +153,41 @@ export class SurfaceObject {
     };
   }
 
-  get dragging() { return this._dragging; }
-  set dragging(d) {
+  get dragging(): boolean { return this._dragging; }
+  set dragging(d: boolean) {
     this._dragging = d; this.element.style.cursor = d ? 'grabbing' : 'grab';
   }
 
-  get positionx() { return this.x.position; }
-  set positionx(p) { this.x.position = p; this.element.style[this.options.xProp] = p + 'px'; this.callPositionCallbacks(); }
+  get positionx(): number { return this.x.position; }
+  set positionx(p: number) { this.x.position = p; this.element.style[this.options.xProp] = p + 'px'; this.callPositionCallbacks(); }
 
-  get positiony() { return this.y.position; }
-  set positiony(p) { this.y.position = p; this.element.style[this.options.yProp] = p + 'px'; this.callPositionCallbacks(); }
+  get positiony(): number { return this.y.position; }
+  set positiony(p: number) { this.y.position = p; this.element.style[this.options.yProp] = p + 'px'; this.callPositionCallbacks(); }
 
-  get settled() { return this.x.settled && this.y.settled; }
+  get settled(): boolean { return this.x.settled && this.y.settled; }
 
   get axis() { return this.options.axis.split(','); }
 
-  resetAxis(axis) {
+  resetAxis(axis: Axis): void {
     this[axis].settled = false;
     this[axis].hittingMin = false;
     this[axis].hittingMax = false;
     this[axis].occilationAmplitudes = [];
   }
 
-  startMove(event) {
-    if ([this.element, ...this.options.additionalHandles].indexOf(event.target) < 0) return;
+  startMove(event: TouchEvent | MouseEvent): void {
+    if ([this.element, ...this.options.additionalHandles].indexOf(event.target as HTMLElement) < 0) return;
 
     app.startMove(event, this);
 
     this.axis.forEach(axis => {
-      this.resetAxis(axis);
+      this.resetAxis(axis as Axis);
     });
 
     this.dragging = true;
   }
 
-  closestSettlePoint() {
+  closestSettlePoint(): Direction {
     const settlePoint = [];
     this.axis.forEach(axis => {
       const { position } = this[axis];
@@ -120,10 +202,10 @@ export class SurfaceObject {
       }
     });
 
-    return settlePoint.join(',')
+    return settlePoint.join(',') as Direction; // TODO: need to figure out how to structure this "direction" concept
   }
 
-  endMove() {
+  endMove(): void {
     const { nudgeThreshold } = this.options;
     this.dragging = false;
 
@@ -139,8 +221,8 @@ export class SurfaceObject {
 
       const dir = velocity > 0 ? 'max' : 'min';
       const info = {
-        min: this.goto(`${axis}-min`, 0, true),
-        max: this.goto(`${axis}-max`, 0, true),
+        min: this.goto(`${axis}-min` as Direction, 0, true), // TODO: more direction changes needed (both lines)
+        max: this.goto(`${axis}-max` as Direction, 0, true),
       };
 
       if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
@@ -158,7 +240,7 @@ export class SurfaceObject {
     if (this.y.velocity === 0) this.y.settled = true;
   }
 
-  goto(direction, overshootOverride, justInfo, instant) {
+  goto(direction: Direction, overshootOverride?: number, justInfo?: boolean, instant?: boolean) {
     const instructions = {};
     const info = {x: null, y: null};
 
@@ -199,7 +281,7 @@ export class SurfaceObject {
       info[axis] *= positionDelta >= 0 ? 1 : -1;
 
       if (!justInfo) {
-        this.resetAxis(axis);
+        this.resetAxis(axis as Axis);
 
         if (instant) {
           this[axis].position += toPixels(positionDelta, scale);
@@ -214,7 +296,7 @@ export class SurfaceObject {
     if (!this.x.settled || !this.y.settled) app.beginMotion(this);
   }
 
-  updateMotion(timeDelta) {
+  updateMotion(timeDelta: number): void {
     const { friction, mass } = this.options;
     const { scale } = this.surface.options;
 
@@ -247,13 +329,13 @@ export class SurfaceObject {
         const forces = [frictionForce]; // friction is always a thing
 
         if (this[axis].hittingMax || (this[axis].velocity >= 0 && this[axis].position > this.maxEdge[axis])) {
-          if (!this[axis].hittingMax) this.callBoundaryCallbacks(`${axis}-max`);
+          if (!this[axis].hittingMax) this.callBoundaryCallbacks(`${axis}-max` as Direction);
           this[axis].hittingMax = true;
           forces.push(this.surface.options.boundarySpring * (this.maxEdge[axis] - this[axis].position)); // force of spring
         }
 
         if (this[axis].hittingMin || (this[axis].velocity <= 0 && this[axis].position < this.minEdge[axis])) {
-          if (!this[axis].hittingMin) this.callBoundaryCallbacks(`${axis}-min`);
+          if (!this[axis].hittingMin) this.callBoundaryCallbacks(`${axis}-min` as Direction);
           this[axis].hittingMin = true;
           forces.push(this.surface.options.boundarySpring * (this.minEdge[axis] - this[axis].position)); // force of spring
         }
@@ -287,20 +369,20 @@ export class SurfaceObject {
     });
   }
 
-  onPositionChange(fn) {
+  onPositionChange(fn: ((details: PositionDetails) => void)): void {
     this.positionCallbacks.push(fn);
     this.callPositionCallbacks();
   }
 
   // add a callback to be called when a boundary is hit
-  onBoundaryContact(boundary, fn) {
+  onBoundaryContact(boundary: Direction, fn: (() => void)): void { // TODO this is another good direciton example, where direction and boundary kinda mean the same thing
     this.boundaryCallbacks[boundary].push(fn);
   }
 
   // internal funcs
 
-  callBoundaryCallbacks(boundary) {
-    this.boundaryCallbacks[boundary].forEach(fn => fn());
+  callBoundaryCallbacks(boundary: Direction): void {
+    this.boundaryCallbacks[boundary].forEach((fn: (() => void)): void => fn());
   }
 
   callPositionCallbacks() {
@@ -308,6 +390,6 @@ export class SurfaceObject {
     const y = this.y.position;
     const xd = this.maxEdge.x - this.minEdge.x;
     const yd = this.maxEdge.y - this.minEdge.y;
-    this.positionCallbacks.forEach(fn => fn({x, y, xp: (x - this.minEdge.x) / xd, yp: (y - this.minEdge.y) / yd}));
+    this.positionCallbacks.forEach((fn: ((details: PositionDetails) => void)) => fn({x, y, xp: (x - this.minEdge.x) / xd, yp: (y - this.minEdge.y) / yd}));
   }
 }

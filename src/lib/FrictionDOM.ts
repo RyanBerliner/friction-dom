@@ -1,6 +1,19 @@
+import {Coordinate} from './types';
+import { SurfaceObject } from './SurfaceObject';
 import {toSeconds} from './utils';
 
+
 export class FrictionDOM {
+  cursor: Coordinate;
+  cursorLast: Coordinate;
+
+  rafStart: number;
+  rafLast: number;
+  raf: ReturnType<typeof setInterval>;
+
+  draggingSurfaceObjects: Array<SurfaceObject>;
+  activeSurfaceObjects: Array<SurfaceObject>;
+
   constructor() {
     this.cursor = {x: 0, y: 0};
     this.cursorLast = {...this.cursor};
@@ -19,17 +32,17 @@ export class FrictionDOM {
     document.addEventListener('touchend', this.endMove.bind(this));
   }
 
-  addActiveSurfaceObject(obj) {
+  addActiveSurfaceObject(obj: SurfaceObject): void {
     const found = this.activeSurfaceObjects.indexOf(obj) > -1;
     if (!found) this.activeSurfaceObjects.push(obj);
   }
 
-  addDraggingSurfaceObjects(obj) {
+  addDraggingSurfaceObjects(obj: SurfaceObject): void {
     const found = this.draggingSurfaceObjects.indexOf(obj) > -1;
     if (!found) this.draggingSurfaceObjects.push(obj);
   }
 
-  beginMotion(withObject) {
+  beginMotion(withObject?: SurfaceObject): void {
     this.rafStart = toSeconds(performance.now());
     this.rafLast = toSeconds(performance.now());
 
@@ -39,7 +52,7 @@ export class FrictionDOM {
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this));
   }
 
-  updateMotion() {
+  updateMotion(): void {
     if (this.activeSurfaceObjects.length === 0) return;
 
     const time = toSeconds(performance.now());
@@ -59,13 +72,13 @@ export class FrictionDOM {
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
   }
 
-  startMove(event, surfaceObject) {
+  startMove(event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
     event.preventDefault();
 
     this.addDraggingSurfaceObjects(surfaceObject);
     this.addActiveSurfaceObject(surfaceObject);
 
-    if (event.targetTouches) {
+    if (event instanceof TouchEvent) {
       this.cursor.x = undefined;
       this.cursor.y = undefined;
       this.cursorLast.x = undefined;
@@ -78,8 +91,8 @@ export class FrictionDOM {
     this.beginMotion();
   }
 
-  move(event) {
-    if (event.targetTouches) {
+  move(event: TouchEvent | MouseEvent): void {
+    if (event instanceof TouchEvent) {
       const {screenX, screenY} = event.targetTouches[0];
       this.cursor.x = screenX;
       this.cursor.y = screenY;
@@ -89,9 +102,9 @@ export class FrictionDOM {
     }
   }
 
-  endMove(event) {
+  endMove(): void {
     for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
-      this.draggingSurfaceObjects[i].endMove(event);
+      this.draggingSurfaceObjects[i].endMove();
       this.draggingSurfaceObjects.splice(i, 0);
     }
   }
