@@ -29,7 +29,7 @@ layout: demo.njk
   const puck = document.getElementById('puck');
 
   const surface = new FrictionDOM.Surface(track);
-  const object = new FrictionDOM.SurfaceObject(puck, surface, {contained: true, axis: 'x,y'});
+  const object = new FrictionDOM.SurfaceObject(puck, surface);
 
   document.querySelector('form').addEventListener('submit', event => {
     event.preventDefault();
