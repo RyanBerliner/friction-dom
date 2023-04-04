@@ -1,0 +1,18 @@
+---
+title: Friction DOM Hompage
+layout: base.njk
+---
+
+<h1>Welcome to Friction DOM</h1>
+
+<p>Treat DOM elements like objects sliding around on the page</p>
+
+<h2>View some demos</h2>
+
+<ul>
+{%- for demo in collections.demo -%}
+<li>
+  <a href="{{ demo.url }}">{{ demo.data.title }}</a>
+</li>
+{%- endfor -%}
+</ul>

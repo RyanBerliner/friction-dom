@@ -1,29 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Friction DOM</title>
-    <style>
-      * {box-sizing: border-box;}
-      body {padding: 150px 30px; margin: auto; max-width: 500px; height: 100%; overflow: hidden;}
-      div {border: 1px solid black; position: relative; border-radius: 21px; height: 100px; margin-bottom: 20px;}
-      #puck {display: block; background: red; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
-    </style>
-  </head>
-  <body>
-    <p>This is with nudge threshold (don't allow floating)</p>
-    <div>
-      <span id="puck"></span>
-    </div>
+---
+title: Second Demo
+layout: demo.njk
+---
 
-    <script src="../../../dist/umd/index.js"></script>
-    <script>
-      const track = document.querySelector('div');
-      const puck = document.getElementById('puck');
+<style>
+  * {box-sizing: border-box;}
+  body {padding: 150px 30px; margin: auto; max-width: 500px; height: 100%; overflow: hidden;}
+  div {border: 1px solid black; position: relative; border-radius: 21px; height: 100px; margin-bottom: 20px;}
+  #puck {display: block; background: red; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
+</style>
+<p>This is with nudge threshold (don't allow floating)</p>
+<div>
+  <span id="puck"></span>
+</div>
 
-      const surface = new FrictionDOM.Surface(track);
-      const object = new FrictionDOM.SurfaceObject(puck, surface, {nudgeThreshold: 50});
-    </script>
-  </body>
-</html>
+<script>
+  const track = document.querySelector('div');
+  const puck = document.getElementById('puck');
+
+  const surface = new FrictionDOM.Surface(track);
+  const object = new FrictionDOM.SurfaceObject(puck, surface, {nudgeThreshold: 50});
+</script>

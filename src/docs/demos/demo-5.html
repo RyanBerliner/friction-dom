@@ -1,50 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Friction DOM</title>
-    <style>
-      html, body {margin: 0; padding: 50px;}
-      * {box-sizing: border-box;}
+---
+title: Fifth Demo
+layout: demo.njk
+---
 
-      div {
-        position: relative;
-        background: #f9d6d6;
-        color: red;
-        border-radius: 20px;
-        padding: 15px;
-        overflow: hidden;
-      }
+<style>
+  html, body {margin: 0; padding: 50px;}
+  * {box-sizing: border-box;}
 
-      div:after {
-        content: '';
-        top: 0;
-        left: 0;
-        height: 100%; 
-        width: 100%; 
-        position: absolute;
-        box-shadow: inset 0 0 5px 10px #f9d6d6
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <p>This is the main</p>
-      <div>This is a resizable div that is elastic</div>
-    </main>
-    <script src="../../../dist/umd/index.js"></script>
-    <script>
-      const div = document.querySelector('div');
+  div {
+    position: relative;
+    background: #f9d6d6;
+    color: red;
+    border-radius: 20px;
+    padding: 15px;
+    overflow: hidden;
+  }
 
-      const surface = new FrictionDOM.Surface([[100, 500], [100, 500]], {
-        boundarySpringDamping: 7,
-      });
+  div:after {
+    content: '';
+    top: 0;
+    left: 0;
+    height: 100%; 
+    width: 100%; 
+    position: absolute;
+    box-shadow: inset 0 0 5px 10px #f9d6d6
+  }
+</style>
+<main>
+  <p>This is the main</p>
+  <div>This is a resizable div that is elastic</div>
+</main>
+<script>
+  const div = document.querySelector('div');
 
-      const object = new FrictionDOM.SurfaceObject(div, surface, {
-        xProp: 'width',
-        yProp: 'height',
-      });
-    </script>
-  </body>
-</html>
+  const surface = new FrictionDOM.Surface([[100, 500], [100, 500]], {
+    boundarySpringDamping: 7,
+  });
+
+  const object = new FrictionDOM.SurfaceObject(div, surface, {
+    xProp: 'width',
+    yProp: 'height',
+  });
+</script>
