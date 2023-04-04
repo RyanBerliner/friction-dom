@@ -72,6 +72,17 @@ type PositionDetails = {
   yp: number,
 }
 
+type GoToInfo = {
+  /**
+   * x velocity in m/s
+   */
+  x: number,
+  /**
+   * y velocity in m/s
+   */
+  y: number,
+}
+
 export class SurfaceObject {
   element: HTMLElement;
   surface: Surface;
@@ -242,10 +253,9 @@ export class SurfaceObject {
     if (this.y.velocity === 0) this.y.settled = true;
   }
 
-  // TODO: add return type?
-  goto(boundary: Boundary | Array<Boundary>, overshootOverride?: number, justInfo?: boolean, instant?: boolean) {
+  goto(boundary: Boundary | Array<Boundary>, overshootOverride?: number, justInfo?: boolean, instant?: boolean): void | GoToInfo {
     const instructions = {};
-    const info = {x: null, y: null};
+    const info: GoToInfo = {x: null, y: null};
 
     boundary = Array.isArray(boundary) ? boundary : [boundary]
 
@@ -380,7 +390,7 @@ export class SurfaceObject {
   }
 
   // add a callback to be called when a boundary is hit
-  onBoundaryContact(boundary: Boundary, fn: (() => void)): void { // TODO this is another good direciton example, where direction and boundary kinda mean the same thing
+  onBoundaryContact(boundary: Boundary, fn: (() => void)): void {
     this.boundaryCallbacks[boundary].push(fn);
   }
 
