@@ -9,10 +9,10 @@
     "start": "concurrently npm:start:*",
     "start:docs": "npm run build:docs -- --serve",
     "start:js": "npm run build:js -- --watch",
-    "build:docs": "eleventy",
-    "build:types": "tsc --declaration --declarationMap --emitDeclarationOnly --outFile dist/types/index.js",
-    "build:js": "rollup -c",
     "build": "npm run build:js && npm run build:types && npm run build:docs",
+    "build:docs": "eleventy",
+    "build:js": "rollup -c",
+    "build:types": "tsc --declaration --declarationMap --emitDeclarationOnly --outFile dist/types/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
