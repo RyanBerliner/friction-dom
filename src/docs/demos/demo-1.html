@@ -33,7 +33,7 @@ layout: demo.njk
 
   document.querySelector('form').addEventListener('submit', event => {
     event.preventDefault();
-    object.goto(event.submitter.value);
+    object.goto(event.submitter.value.split(','));
   });
 
 </script>

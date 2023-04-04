@@ -3,8 +3,8 @@ import {app} from './FrictionDOM';
 import {toMeters, toPixels, gravity} from './utils';
 import { Surface } from './Surface';
 
-type Direction = 'x-min,y-min';  // TODO: will need to update this
 type Axis = 'x' | 'y';
+type Boundary = 'x-min' | 'x-max' | 'y-min' | 'y-max';
 
 type SurfaceObjectOptions = {
   /**
@@ -12,7 +12,7 @@ type SurfaceObjectOptions = {
    */
   mass: number,
   friction: number,
-  axis: Axis | 'x,y' | 'y,x', // IDEA: is a string really the best here?
+  axis: Axis | Array<Axis>,
   xProp: string,
   yProp: string,
   contained: boolean,
@@ -24,7 +24,7 @@ type SurfaceObjectOptions = {
    * More elements you can click/touch to move the object
    */
   additionalHandles: Array<HTMLElement>,
-  initialPosition: Direction,
+  initialPosition: Boundary | Array<Boundary>,
 };
 
 type AxisState = {
@@ -96,13 +96,13 @@ export class SurfaceObject {
     this.options = {
       mass: 0.17,
       friction: 0.15, // kinetic friction of rubber and ice
-      axis: 'x,y',
+      axis: ['x', 'y'],
       xProp: 'left',
       yProp: 'top',
       contained: true,
       nudgeThreshold: 0,
       additionalHandles: [],
-      initialPosition: 'x-min,y-min',
+      initialPosition: ['x-min', 'y-min'],
       ...(options || {}),
     }
 
@@ -166,7 +166,9 @@ export class SurfaceObject {
 
   get settled(): boolean { return this.x.settled && this.y.settled; }
 
-  get axis() { return this.options.axis.split(','); }
+  get axis(): Array<Axis> {
+    return Array.isArray(this.options.axis) ? this.options.axis : [this.options.axis];
+  }
 
   resetAxis(axis: Axis): void {
     this[axis].settled = false;
@@ -181,28 +183,28 @@ export class SurfaceObject {
     app.startMove(event, this);
 
     this.axis.forEach(axis => {
-      this.resetAxis(axis as Axis);
+      this.resetAxis(axis);
     });
 
     this.dragging = true;
   }
 
-  closestSettlePoint(): Direction {
-    const settlePoint = [];
+  closestSettlePoint(): Array<Boundary> {
+    const settlePoints = [];
     this.axis.forEach(axis => {
       const { position } = this[axis];
       const delta = this.maxEdge[axis] - this.minEdge[axis];
       const percentage = (position - this.minEdge[axis]) / delta;
       if (position < this.minEdge[axis] || percentage <= 0.5) {
-        settlePoint.push(`${axis}-min`);
+        settlePoints.push(`${axis}-min`);
       }
 
       if (position > this.maxEdge[axis] || percentage > 0.5) {
-        settlePoint.push(`${axis}-max`);
+        settlePoints.push(`${axis}-max`);
       }
     });
 
-    return settlePoint.join(',') as Direction; // TODO: need to figure out how to structure this "direction" concept
+    return settlePoints;
   }
 
   endMove(): void {
@@ -221,8 +223,8 @@ export class SurfaceObject {
 
       const dir = velocity > 0 ? 'max' : 'min';
       const info = {
-        min: this.goto(`${axis}-min` as Direction, 0, true), // TODO: more direction changes needed (both lines)
-        max: this.goto(`${axis}-max` as Direction, 0, true),
+        min: this.goto(`${axis}-min`, 0, true),
+        max: this.goto(`${axis}-max`, 0, true),
       };
 
       if (Math.abs(velocity) < Math.abs(info[dir][axis])) {
@@ -240,13 +242,16 @@ export class SurfaceObject {
     if (this.y.velocity === 0) this.y.settled = true;
   }
 
-  goto(direction: Direction, overshootOverride?: number, justInfo?: boolean, instant?: boolean) {
+  // TODO: add return type?
+  goto(boundary: Boundary | Array<Boundary>, overshootOverride?: number, justInfo?: boolean, instant?: boolean) {
     const instructions = {};
     const info = {x: null, y: null};
 
-    direction.split(',').forEach(d => {
-      const [axis, bound] = d.split('-');
-      instructions[axis] = bound;
+    boundary = Array.isArray(boundary) ? boundary : [boundary]
+
+    boundary.forEach(d => {
+      const [axis, dir] = d.split('-');
+      instructions[axis] = dir;
     });
 
     const { friction, mass } = this.options;
@@ -281,7 +286,7 @@ export class SurfaceObject {
       info[axis] *= positionDelta >= 0 ? 1 : -1;
 
       if (!justInfo) {
-        this.resetAxis(axis as Axis);
+        this.resetAxis(axis);
 
         if (instant) {
           this[axis].position += toPixels(positionDelta, scale);
@@ -329,13 +334,13 @@ export class SurfaceObject {
         const forces = [frictionForce]; // friction is always a thing
 
         if (this[axis].hittingMax || (this[axis].velocity >= 0 && this[axis].position > this.maxEdge[axis])) {
-          if (!this[axis].hittingMax) this.callBoundaryCallbacks(`${axis}-max` as Direction);
+          if (!this[axis].hittingMax) this.callBoundaryCallbacks(`${axis}-max`);
           this[axis].hittingMax = true;
           forces.push(this.surface.options.boundarySpring * (this.maxEdge[axis] - this[axis].position)); // force of spring
         }
 
         if (this[axis].hittingMin || (this[axis].velocity <= 0 && this[axis].position < this.minEdge[axis])) {
-          if (!this[axis].hittingMin) this.callBoundaryCallbacks(`${axis}-min` as Direction);
+          if (!this[axis].hittingMin) this.callBoundaryCallbacks(`${axis}-min`);
           this[axis].hittingMin = true;
           forces.push(this.surface.options.boundarySpring * (this.minEdge[axis] - this[axis].position)); // force of spring
         }
@@ -375,13 +380,13 @@ export class SurfaceObject {
   }
 
   // add a callback to be called when a boundary is hit
-  onBoundaryContact(boundary: Direction, fn: (() => void)): void { // TODO this is another good direciton example, where direction and boundary kinda mean the same thing
+  onBoundaryContact(boundary: Boundary, fn: (() => void)): void { // TODO this is another good direciton example, where direction and boundary kinda mean the same thing
     this.boundaryCallbacks[boundary].push(fn);
   }
 
   // internal funcs
 
-  callBoundaryCallbacks(boundary: Direction): void {
+  callBoundaryCallbacks(boundary: Boundary): void {
     this.boundaryCallbacks[boundary].forEach((fn: (() => void)): void => fn());
   }
 

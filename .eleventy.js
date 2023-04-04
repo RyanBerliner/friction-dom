@@ -9,6 +9,9 @@ module.exports = function(config) {
 
   config.addPassthroughCopy({'dist/umd/index.js': 'assets/lib/index.js'});
 
+  config.setUseGitIgnore(false);
+  config.addWatchTarget('dist/**/*');
+
   return {
     dir: {
       input: 'src/docs',
