@@ -86,12 +86,12 @@ layout: demo.njk
 <script>
   const div = document.querySelector('div');
 
-  const outerSurface = new FrictionDOM.Surface([[0,0], [0,0]], {
+  const outerSurface = new FrictionDOM.Surface([{x:0,y:0}, {x:0,y:0}], {
     boundarySpringDamping: 7,
     boundaryPullSpring: 0.02,
   });
 
-  const surface = new FrictionDOM.Surface([[100, 650], [100, 500]], {
+  const surface = new FrictionDOM.Surface([{x:100,y:100}, {x:650, y:500}], {
     boundarySpringDamping: 7,
   });
 

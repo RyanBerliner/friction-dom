@@ -33,7 +33,7 @@ layout: demo.njk
 <script>
   const div = document.querySelector('div');
 
-  const surface = new FrictionDOM.Surface([[100, 500], [100, 500]], {
+  const surface = new FrictionDOM.Surface([{x: 100, y: 100}, {x: 500, y: 500}], {
     boundarySpringDamping: 7,
   });
 

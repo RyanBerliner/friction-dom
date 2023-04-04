@@ -1,3 +1,4 @@
+import { Coordinate } from "./types";
 import { SurfaceObject } from "./SurfaceObject";
 
 type SurfacePadding = number | (() => number);
@@ -29,8 +30,10 @@ type SurfaceOptions = {
   paddingMaxY: SurfacePadding,
 };
 
+type SurfaceBounds = typeof window | HTMLElement | Array<Coordinate>;
+
 export class Surface {
-  element: HTMLElement | typeof window; // TODO: need to add the range option as well
+  element: SurfaceBounds;
   surfaceObjects: Array<SurfaceObject>;
   resizeTimeout: ReturnType<typeof setTimeout>;
   options: SurfaceOptions;
@@ -40,8 +43,8 @@ export class Surface {
   minY: number;
   maxY: number;
 
-  constructor(element: HTMLElement, options: Partial<SurfaceOptions>) {
-    this.element = element; // [[min x, max x], [min y, max y]]
+  constructor(element: SurfaceBounds, options: Partial<SurfaceOptions>) {
+    this.element = element;
     this.surfaceObjects = [];
     this.resizeTimeout;
 
@@ -79,10 +82,10 @@ export class Surface {
     const { paddingMinX, paddingMinY, paddingMaxX, paddingMaxY } = this.options;
 
     if (Array.isArray(this.element)) {
-      this.minX = this.element[0][0];
-      this.maxX = this.element[0][1];
-      this.minY = this.element[1][0];
-      this.maxY = this.element[1][1];
+      this.minX = this.element[0].x;
+      this.minY = this.element[0].y;
+      this.maxX = this.element[1].x;
+      this.maxY = this.element[1].y;
     } else {
       this.minX = 0;
       this.minY = 0;
