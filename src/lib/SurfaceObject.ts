@@ -43,7 +43,7 @@ type AxisState = {
   settled: boolean,
   hittingMin: boolean,
   hittingMax: boolean,
-  occilationAmplitudes: Array<number>,
+  previousDisplacements: Array<number>,
 };
 
 type BoundaryCallbacks = {
@@ -124,7 +124,7 @@ export class SurfaceObject {
       settled: true,
       hittingMin: false,
       hittingMax: false,
-      occilationAmplitudes: [],
+      previousDisplacements: [],
     }
 
     this.x = {...axisState};
@@ -185,7 +185,7 @@ export class SurfaceObject {
     this[axis].settled = false;
     this[axis].hittingMin = false;
     this[axis].hittingMax = false;
-    this[axis].occilationAmplitudes = [];
+    this[axis].previousDisplacements = [];
   }
 
   startMove(event: TouchEvent | MouseEvent): void {
@@ -360,19 +360,28 @@ export class SurfaceObject {
         this[axis].acceleration = forces.reduce((sum, x) => sum + x, 0) / mass;
         const newVelocity = this[axis].velocity + (this[axis].acceleration * timeDelta);
 
-        if (this[axis].hittingMin || this[axis].hittingMax && newVelocity * this[axis].velocity <= 0) {
-          this[axis].occilationAmplitudes.push(Math.abs((this[axis].hittingMax ? this.maxEdge[axis] : this.minEdge[axis]) - this[axis].position));
+        if (this[axis].hittingMin || this[axis].hittingMax) {
+          this[axis].previousDisplacements.push(
+            Math.abs(this[axis].hittingMax
+              ? this[axis].position - this.maxEdge[axis]
+              : this.minEdge[axis] - this[axis].position
+            )
+          );
         }
 
         this[axis].velocity = newVelocity * this[axis].velocity <= 0 && !(this[axis].hittingMin || this[axis].hittingMax) ? 0 : newVelocity;
 
-        if (this[axis].occilationAmplitudes.length >= 5) {
-          let total = 0;
-          for (let i = this[axis].occilationAmplitudes.length - 1; i >= this[axis].occilationAmplitudes.length - 6; i--) {
-            total += this[axis].occilationAmplitudes[i];
+        if (this[axis].previousDisplacements.length >= 5) {
+          let min: number = Infinity;
+          let max: number = -Infinity;
+
+          for (let i = this[axis].previousDisplacements.length - 1; i >= this[axis].previousDisplacements.length - 6; i--) {
+            let dis = this[axis].previousDisplacements[i];
+            if (dis > max) max = dis;
+            if (dis < min) min = dis;
           }
 
-          if (total / 5 < 1) {
+          if (max - min < 1) {
             this[axis].velocity = 0;
             // set position exactly as it should be on the limit
             this[`position${axis}`] = this[axis].hittingMax ? this.maxEdge[axis] : this.minEdge[axis];
