@@ -7,7 +7,7 @@ module.exports = function(config) {
       });
   });
 
-  config.addPassthroughCopy({'dist/umd/index.js': 'assets/lib/index.js'});
+  config.addPassthroughCopy({'dist/umd/index.min.js': 'assets/lib/index.min.js'});
 
   config.setUseGitIgnore(false);
   config.addWatchTarget('dist/**/*');

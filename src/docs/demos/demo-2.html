@@ -1,23 +1,22 @@
 ---
-title: Second Demo
+title: Nudge Thresholding
 layout: demo.njk
 ---
 
-<style>
-  * {box-sizing: border-box;}
-  body {padding: 150px 30px; margin: auto; max-width: 500px; height: 100%; overflow: hidden;}
-  div {border: 1px solid black; position: relative; border-radius: 21px; height: 100px; margin-bottom: 20px;}
-  #puck {display: block; background: red; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
-</style>
-<p>This is with nudge threshold (don't allow floating)</p>
-<div>
-  <span id="puck"></span>
+
+<div class="container my-5">
+  <div id="surface-demo" style="min-height:140px;" class="position-relative border border-primary bg-primary-subtle rounded-3 flex-grow-1">
+    <div id="surface-object-demo" style="width:40px;height:40px;" class="bg-primary rounded-circle position-relative"></div>
+  </div>
 </div>
 
 <script>
-  const track = document.querySelector('div');
-  const puck = document.getElementById('puck');
+  const surface = new FrictionDOM.Surface(document.getElementById('surface-demo'), {
+    paddingMinX: 16,
+    paddingMaxX: 16,
+    paddingMinY: 16,
+    paddingMaxY: 16,
+  });
 
-  const surface = new FrictionDOM.Surface(track);
-  const object = new FrictionDOM.SurfaceObject(puck, surface, {nudgeThreshold: 50});
+  const object = new FrictionDOM.SurfaceObject(document.getElementById('surface-object-demo'), surface, {nudgeThreshold: 50});
 </script>

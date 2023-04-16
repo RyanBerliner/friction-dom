@@ -39,6 +39,7 @@
   "homepage": "https://github.com/RyanBerliner/friction-dom#readme",
   "devDependencies": {
     "@11ty/eleventy": "^2.0.1",
+    "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^11.0.0",
     "concurrently": "^8.0.1",
     "rollup": "^3.20.2",

@@ -1,17 +1,10 @@
 ---
-title: Third Demo
+title: Locked Axis
 layout: demo.njk
 ---
 
-<style>
-  * {box-sizing: border-box;}
-  body {padding: 150px 30px; margin: auto; max-width: 600px; height: 100%; overflow: hidden; text-align: center;}
-  div {border: 1px solid black; position: relative; border-radius: 21px; height: 300px; width: 42px; margin: 0 auto;}
-  #puck {display: block; background: red; height: 40px; width: 40px; position: relative; border-radius: 20px; cursor: grab;}
-</style>
-<p>This is with nudge threshold (don't allow floating) and only vertical movement</p>
-<div>
-  <span id="puck"></span>
+<div class="my-5 mx-auto border border-primary bg-primary-subtle" style="width:42px;height:200px;border-radius:21px;">
+  <span id="puck" class="d-block m-0 bg-primary rounded-circle" style="height:40px;width:40px;"></span>
 </div>
 
 <script>

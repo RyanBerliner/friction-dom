@@ -1,4 +1,5 @@
 import typescript from '@rollup/plugin-typescript';
+import terser from '@rollup/plugin-terser';
 
 const config = {
   sourcemap: true,
@@ -18,8 +19,10 @@ const esmConfig = {
 export default {
   input: 'src/lib/index.ts',
   output: [
-    {...umdConfig, file: `dist/umd/index.js`},
-    {...esmConfig, file: `dist/esm/index.js`},
+    {...umdConfig, file: 'dist/umd/index.js'},
+    {...umdConfig, file: 'dist/umd/index.min.js', plugins: [terser()]},
+    {...esmConfig, file: 'dist/esm/index.js'},
+    {...esmConfig, file: 'dist/esm/index.min.js', plugins: [terser()]},
   ],
   plugins: [typescript()],
 };

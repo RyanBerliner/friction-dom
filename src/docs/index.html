@@ -3,16 +3,117 @@ title: Friction DOM Hompage
 layout: base.njk
 ---
 
-<h1>Welcome to Friction DOM</h1>
+<div class="container">
+  <div class="my-5">
+    <h1 class="text-center">Friction DOM</h1>
+    <p class="text-center lead">Add interactive motion to websites.</p>
+    <div class="d-md-flex align-items-stretch justify-content-center mb-5">
+      <div class="bg-body-tertiary border rounded-3 p-2 d-flex align-items-center me-md-3 mb-md-0 mb-3 justify-content-md-center justify-content-between">
+        <pre class="mb-0 ms-2 p-0 border-0 bg-transparent" id="npm-i-text">npm i friction-dom</pre>
+        <button class="ms-3 btn btn-primary rounded-1 position-relative" id="npm-i-btn">Copy</button>
+        <script type="text/template" id="check-svg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" style="bottom:2px;position:relative;" viewBox="0 0 16 16">
+            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+          </svg>
+        </script>
+        <script>
+          let copyTimeout;
+          const copyText = document.getElementById('npm-i-text');
+          const copyBtn = document.getElementById('npm-i-btn');
+          const copyPrompt = copyBtn.querySelector('span');
+          const copySuccess = copyBtn.querySelector('span');
+          const copyCont = copyBtn.parentElement;
 
-<p>Treat DOM elements like objects sliding around on the page</p>
+          copyBtn.addEventListener('click', () => {
+            clearTimeout(copyTimeout);
 
-<h2>View some demos</h2>
+            navigator.clipboard.writeText(copyText.innerText)
+              .then(() => {
+                copyBtn.style.width = copyBtn.offsetWidth + 'px';
+                copyBtn.innerHTML = document.getElementById('check-svg').innerHTML;
+                copyCont.classList.add('border-primary', 'bg-primary-subtle');
+                copyText.classList.add('text-primary');
 
-<ul>
-{%- for demo in collections.demo -%}
-<li>
-  <a href="{{ demo.url }}">{{ demo.data.title }}</a>
-</li>
-{%- endfor -%}
-</ul>
+                copyTimeout = setTimeout(() => {
+                  copyBtn.style.width = null;
+                  copyBtn.innerText = 'Copy';
+                  copyCont.classList.remove('border-primary', 'bg-primary-subtle');
+                  copyText.classList.remove('text-primary');
+                }, 1500);
+              })
+          });
+        </script>
+      </div>
+      <a href="#demos" class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-center">Explore Demos</a>
+    </div>
+  </div>
+  <div class="row align-items-stretch my-5">
+    <div class="col-md-6">
+      <p class="ms-3">Define a surface and add an object.</p>
+      <pre class="mb-md-0">
+{{ '<div id="surface">
+  <div id="surface-object"></div>
+</div>
+<script>
+  const surface = new Surface("surface");
+  const object = new SurfaceObject("surface-object", surface);
+</script>' | escape }}</pre>
+    </div>
+    <div class="col-md-6 d-flex flex-column">
+      <p class="ms-3">Receive touch-friendly interactive motion.</p>
+      <div id="surface-demo" style="min-height:140px;" class="position-relative border border-primary bg-primary-subtle rounded-3 flex-grow-1">
+        <button class="po-0 position-absolute start-0 top-0 rounded-2 bg-transparent border-top border-start border-3 border-primary m-1" id="ts"><span class="visually-hidden">Top Left</span></button>
+        <button class="po-0 position-absolute end-0 top-0 rounded-2 bg-transparent border-top border-end border-3 border-primary m-1" id="te"><span class="visually-hidden">Top Right</span></button>
+        <button class="po-0 position-absolute start-0 bottom-0 rounded-2 bg-transparent border-bottom border-start border-3 border-primary m-1" id="bs"><span class="visually-hidden">Bottom Left</span></button>
+        <button class="po-0 position-absolute end-0 bottom-0 rounded-2 bg-transparent border-bottom border-end border-3 border-primary m-1" id="be"><span class="visually-hidden">Bottom Right</span></button>
+        <div id="surface-object-demo" style="width:40px;height:40px;" class="bg-primary rounded-circle position-relative"></div>
+      </div>
+      <script>
+        const surface = new FrictionDOM.Surface(document.getElementById('surface-demo'), {
+          paddingMinX: 16,
+          paddingMaxX: 16,
+          paddingMinY: 16,
+          paddingMaxY: 16,
+        });
+        const object = new FrictionDOM.SurfaceObject(document.getElementById('surface-object-demo'), surface);
+        document.getElementById('ts').addEventListener('click', () => object.goto(['x-min', 'y-min']));
+        document.getElementById('te').addEventListener('click', () => object.goto(['x-max', 'y-min']));
+        document.getElementById('bs').addEventListener('click', () => object.goto(['x-min', 'y-max']));
+        document.getElementById('be').addEventListener('click', () => object.goto(['x-max', 'y-max']));
+      </script>
+      <style>
+        #surface-object-demo {
+          animation: shake 0.5s 1s 1;
+          transform: translate(0,0);
+        }
+        @keyframes shake {
+          0%, 100% { transform: translate(0, 0);}
+          20%, 60% { transform: translateX(10px);}
+          40%, 80% { transform: translateX(-10px);}
+        }
+        #ts, #te, #bs, #be {
+          height: 1.5rem;
+          width: 1.5rem;
+          border: none;
+          display: block;
+          opacity: 0.4;
+        }
+        #ts { border-top-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+        #te { border-top-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        #bs { border-top-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        #be { border-top-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+      </style>
+    </div>
+  </div>
+
+
+  <h2 id="demos">View some demos</h2>
+
+  <ul>
+  {%- for demo in collections.demo -%}
+  <li>
+    <a href="{{ demo.url }}">{{ demo.data.title }}</a>
+  </li>
+  {%- endfor -%}
+  </ul>
+</div>
