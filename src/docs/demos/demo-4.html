@@ -42,7 +42,7 @@ layout: demo.njk
 
   #gap-for-style {
     background-color: #000;
-    height: 3.5rem;
+    height: 3.4rem;
   }
 
   #gap-for-style::before,
@@ -141,10 +141,24 @@ layout: demo.njk
       </div>
     </div>
     <div class="container ps-3 pe-0">
-      <div class="py-2 border-bottom text-body-tertiary small">To:</div>
-      <div class="py-2 border-bottom text-body-tertiary small">CC/Bcc, From: michael.scott@dundermifflin.com</div>
-      <div class="py-2 border-bottom text-body-tertiary small">Subject:</div>
-      <div class="pt-5 my-5">Sent from my iPhone</div>
+      <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
+        <span class="text-nowrap">To:</span>
+        <input class="form-control form-control-sm border-0"/>
+      </label>
+      <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
+        <span class="text-nowrap">CC/Bcc, From:</span>
+        <input class="form-control form-control-sm border-0" value="michael.scott@accessibleweb.com" />
+      </label>
+      <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
+        <span class="text-nowrap">Subject:</span>
+        <input class="form-control form-control-sm border-0"/>
+      </label>
+    </div>
+    <div class="container px-0">
+      <div class="form-control me-3 mb-3 border-0" contenteditable="true">
+        <br/><br/><br/><br/><br/>
+        Sent from my iPhone
+      </div>
     </div>
   </div>
 </div>
