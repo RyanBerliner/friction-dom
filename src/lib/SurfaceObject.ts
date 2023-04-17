@@ -89,6 +89,7 @@ export class SurfaceObject {
   options: SurfaceObjectOptions;
   x: AxisState;
   y: AxisState;
+  currentEvent: TouchEvent | MouseEvent;
 
   boundaryCallbacks: BoundaryCallbacks;
   positionCallbacks: Array<((details: PositionDetails) => void)>; // fill out
@@ -96,6 +97,8 @@ export class SurfaceObject {
   _dragging: boolean;
 
   constructor(element: HTMLElement, surface: Surface, options: Partial<SurfaceObjectOptions>) {
+    app.surfaceObjects.push(this);
+
     this.positionCallbacks = [];
 
     this.surface = surface;
@@ -134,9 +137,6 @@ export class SurfaceObject {
     this.positiony = this.y.position + this.minEdge.y;
 
     this.dragging = false;
-
-    this.element.addEventListener('mousedown', this.startMove.bind(this), true);
-    this.element.addEventListener('touchstart', this.startMove.bind(this), true);
 
     this.boundaryCallbacks = {
       'x-min': [],
@@ -189,7 +189,7 @@ export class SurfaceObject {
   }
 
   startMove(event: TouchEvent | MouseEvent): void {
-    if ([this.element, ...this.options.additionalHandles].indexOf(event.target as HTMLElement) < 0) return;
+    this.currentEvent = event;
 
     app.startMove(event, this);
 
@@ -218,7 +218,21 @@ export class SurfaceObject {
     return settlePoints;
   }
 
-  endMove(): void {
+  endMove(performEvent: boolean): void {
+    if (this.currentEvent && performEvent) {
+      const el: HTMLElement = this.currentEvent.target as HTMLElement;
+      // TODO: make this a true focusable check
+      if (el.tagName === 'INPUT' || el.getAttribute('contenteditable')) {
+        el.focus();
+      } else if (document.activeElement) {
+        (document.activeElement as HTMLElement).blur();
+      }
+
+      el.click();
+    }
+
+    this.currentEvent = null;
+
     const { nudgeThreshold } = this.options;
     this.dragging = false;
 

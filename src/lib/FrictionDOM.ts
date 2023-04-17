@@ -13,8 +13,11 @@ export class FrictionDOM {
 
   draggingSurfaceObjects: Array<SurfaceObject>;
   activeSurfaceObjects: Array<SurfaceObject>;
+  surfaceObjects: Array<SurfaceObject>;
+  moveCount: number;
 
   constructor() {
+    this.moveCount = 0;
     this.cursor = {x: 0, y: 0};
     this.cursorLast = {...this.cursor};
 
@@ -24,6 +27,10 @@ export class FrictionDOM {
 
     this.draggingSurfaceObjects = [];
     this.activeSurfaceObjects = [];
+    this.surfaceObjects = [];
+
+    document.addEventListener('mousedown', this.maybeStartMove.bind(this), {capture: true, passive: false});
+    document.addEventListener('touchstart', this.maybeStartMove.bind(this), {capture: true, passive: false});
 
     document.addEventListener('mousemove', this.move.bind(this));
     document.addEventListener('touchmove', this.move.bind(this));
@@ -72,6 +79,17 @@ export class FrictionDOM {
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
   }
 
+  maybeStartMove(event: TouchEvent | MouseEvent) {
+    this.surfaceObjects.forEach(object => {
+      if (
+        object.element.contains(event.target as HTMLElement) ||
+        object.options.additionalHandles.indexOf(event.target as HTMLElement) >= 0
+      ) {
+        object.startMove(event);
+      }
+    });
+  }
+
   startMove(event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
     event.preventDefault();
 
@@ -92,6 +110,8 @@ export class FrictionDOM {
   }
 
   move(event: TouchEvent | MouseEvent): void {
+    this.moveCount++;
+
     if (event instanceof TouchEvent) {
       const {screenX, screenY} = event.targetTouches[0];
       this.cursor.x = screenX;
@@ -104,9 +124,11 @@ export class FrictionDOM {
 
   endMove(): void {
     for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
-      this.draggingSurfaceObjects[i].endMove();
+      this.draggingSurfaceObjects[i].endMove(this.moveCount < 5);
       this.draggingSurfaceObjects.splice(i, 0);
     }
+
+    this.moveCount = 0;
   }
 }
 
