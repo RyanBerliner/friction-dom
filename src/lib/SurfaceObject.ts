@@ -187,12 +187,6 @@ export class SurfaceObject {
   }
 
   startMove(event: TouchEvent | MouseEvent): void {
-    const target = event.target as HTMLElement;
-
-    if (!this.element.contains(target)) {
-      return;
-    }
-
     this.currentEvent = event;
 
     app.startMove(event, this);
