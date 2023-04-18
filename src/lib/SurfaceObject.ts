@@ -20,10 +20,6 @@ type SurfaceObjectOptions = {
    * At what threshold should we nudge the object to an edge
    */
   nudgeThreshold: number,
-  /**
-   * More elements you can click/touch to move the object
-   */
-  additionalHandles: Array<HTMLElement>,
   initialPosition: Boundary | Array<Boundary>,
 };
 
@@ -115,7 +111,6 @@ export class SurfaceObject {
       yProp: 'top',
       contained: true,
       nudgeThreshold: 0,
-      additionalHandles: [],
       initialPosition: ['x-min', 'y-min'],
       ...(options || {}),
     }
@@ -137,6 +132,9 @@ export class SurfaceObject {
     this.positiony = this.y.position + this.minEdge.y;
 
     this.dragging = false;
+
+    this.element.addEventListener('mousedown', this.startMove.bind(this), {capture: true, passive: false});
+    this.element.addEventListener('touchstart', this.startMove.bind(this), {capture: true, passive: false});
 
     this.boundaryCallbacks = {
       'x-min': [],
@@ -189,6 +187,12 @@ export class SurfaceObject {
   }
 
   startMove(event: TouchEvent | MouseEvent): void {
+    const target = event.target as HTMLElement;
+
+    if (!this.element.contains(target)) {
+      return;
+    }
+
     this.currentEvent = event;
 
     app.startMove(event, this);

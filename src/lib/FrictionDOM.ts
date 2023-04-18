@@ -29,9 +29,6 @@ export class FrictionDOM {
     this.activeSurfaceObjects = [];
     this.surfaceObjects = [];
 
-    document.addEventListener('mousedown', this.maybeStartMove.bind(this), {capture: true, passive: false});
-    document.addEventListener('touchstart', this.maybeStartMove.bind(this), {capture: true, passive: false});
-
     document.addEventListener('mousemove', this.move.bind(this));
     document.addEventListener('touchmove', this.move.bind(this));
 
@@ -77,17 +74,6 @@ export class FrictionDOM {
 
     this.rafLast = time;
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
-  }
-
-  maybeStartMove(event: TouchEvent | MouseEvent) {
-    this.surfaceObjects.forEach(object => {
-      if (
-        object.element.contains(event.target as HTMLElement) ||
-        object.options.additionalHandles.indexOf(event.target as HTMLElement) >= 0
-      ) {
-        object.startMove(event);
-      }
-    });
   }
 
   startMove(event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
