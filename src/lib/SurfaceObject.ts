@@ -187,6 +187,20 @@ export class SurfaceObject {
   }
 
   startMove(event: TouchEvent | MouseEvent): void {
+    const target: HTMLElement = event.target as HTMLElement;
+
+    let curr: HTMLElement = target;
+    while (this.element.contains(curr)) {
+      if (curr.offsetHeight !== curr.scrollHeight) {
+        // lets check if we are at an endpoint
+        console.log('this can be scrolled, so lets stop')
+        return;
+      }
+
+      console.log('checking an element', curr, this.element);
+      curr = curr.parentElement;
+    }
+
     this.currentEvent = event;
 
     app.startMove(event, this);
