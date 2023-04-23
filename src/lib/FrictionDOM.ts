@@ -108,7 +108,7 @@ export class FrictionDOM {
     }
   }
 
-  endMove(forScrolling: boolean): void {
+  endMove(_: TouchEvent | MouseEvent, forScrolling: boolean): void {
     for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
       const simulateClick: boolean = !forScrolling && this.moveCount < 5;
       this.draggingSurfaceObjects[i].endMove(simulateClick);

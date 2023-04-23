@@ -450,7 +450,7 @@ export class SurfaceObject {
     });
 
     if (cancelMotion) {
-      app.endMove(true);
+      app.endMove(undefined, true);
     }
   }
 
