@@ -162,30 +162,23 @@ layout: demo.njk
           </label>
         </div>
         <div class="container px-0">
-          <div class="form-control me-3 mb-3 border-0" contenteditable="true">
-            <br/><br/><br/><br/><br/>
-            <br/><br/><br/><br/><br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
-            Sent from my iPhone<br/>
+          <div class="form-control pt-3 pb-5 mb-5 border-0" contenteditable="true">
+            Mm. Got it. Well, you tell Mose that he’s a good man and that I hope he feels better. Oh, come on, it can always get better. Right? [lying in water, car lights light up his location] Hello? Who's there? My name is Andrew Bernard, I was with a group called Dunder Mifflin. Hello?
+            <br/>
+            <br/>
+            [clears throat] Oh. Eso es lo que dice, el! Well, that's not what I'm saying. Just, you know, find it. Pretend that your jobs depend on it. Okay, Michael. Um, you know I love when you do that voice, but today, I'm so sorry. I need you to tell me that you know you're not Cece's godfather.
+            <br/>
+            <br/>
+            Well, you have to choose a food option and there's information in there about directions and lodging... Oh, excuse me! I'm fine with my choices! I know exactly what he's talking about. I sprout mung beans on a damp paper towel in my desk drawer. Very nutritious. But they smell like death.
+            <br/>
+            <br/>
+            Really. In a minute. No.
+            <br/>
+            <br/>
+            Good, glad. OK. Cool music. Bye.
+            <br/>
+            <br/>
+            <br/>
             Sent from my iPhone
           </div>
         </div>
@@ -252,5 +245,19 @@ layout: demo.njk
     } else {
       document.body.style.overflow = 'hidden';
     }
+  });
+
+  // a trick to get safary to NOT think it needs to scroll, but quickly revert it
+  document.body.addEventListener('focusin', event => {
+    const {target} = event;
+    if (target.tagName !== 'INPUT' && !target.getAttribute('contenteditable')) return;
+
+    target.style.transform = 'translateY(-500px)';
+    target.style.opacity = '0';
+
+    setTimeout(() => {
+      target.style.transform = null;
+      target.style.opacity = null;
+    }, 0);
   });
 </script>
