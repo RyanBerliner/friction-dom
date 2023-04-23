@@ -138,7 +138,7 @@ layout: demo.njk
           <div class="bg-body-secondary rounded-pill top-0 start-50 translate-middle position-absolute" style="height:5px;width:60px;margin-top:10px;"></div>
         </div>
       </div>
-      <div class="flex-grow-1" style="overflow-y: auto;">
+      <div class="flex-grow-1" style="overflow-y: auto;" id="scrollable-bit">
         <div class="container px-3">
           <div class="mt-3 pe-none d-flex align-items-center justify-content-between mb-3">
             <h1 class="fw-bold mb-0">New Message</h1>
@@ -150,19 +150,19 @@ layout: demo.njk
         <div class="container ps-3 pe-0" id="offcanvas-content">
           <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
             <span class="text-nowrap">To:</span>
-            <input class="form-control border-0"/>
+            <input class="shadow-none form-control border-0"/>
           </label>
           <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
             <span class="text-nowrap">CC/Bcc, From:</span>
-            <input class="form-control border-0" value="michael.scott@accessibleweb.com" />
+            <input class="shadow-none form-control border-0" value="michael.scott@accessibleweb.com" />
           </label>
           <label class="py-2 border-bottom text-body-tertiary small d-flex align-items-center w-100 pe-3">
             <span class="text-nowrap">Subject:</span>
-            <input class="form-control border-0"/>
+            <input class="shadow-none form-control border-0"/>
           </label>
         </div>
         <div class="container px-0">
-          <div class="form-control pt-3 pb-5 mb-5 border-0" contenteditable="true">
+          <div class="shadow-none form-control pt-3 pb-5 mb-5 border-0" contenteditable="true">
             Mm. Got it. Well, you tell Mose that he’s a good man and that I hope he feels better. Oh, come on, it can always get better. Right? [lying in water, car lights light up his location] Hello? Who's there? My name is Andrew Bernard, I was with a group called Dunder Mifflin. Hello?
             <br/>
             <br/>
@@ -188,6 +188,7 @@ layout: demo.njk
 </div>
 
 <script>
+  const scrollableBit = document.getElementById('scrollable-bit');
   const cancel = document.getElementById('cancel');
   const gap = document.getElementById('gap-for-style');
   const span = document.getElementById('span-for-style');
@@ -247,6 +248,18 @@ layout: demo.njk
     }
   });
 
+  let maxHeightTimeout = null;
+
+  function setMaxHeight() {
+    clearTimeout(maxHeightTimeout);
+
+    maxHeightTimeout = setTimeout(() => {
+      const top = scrollableBit.getBoundingClientRect().top;
+      const maxHeight = window.visualViewport.height - top;
+      scrollableBit.style.maxHeight = `${maxHeight}px`;
+    }, 750);
+  }
+
   // a trick to get safary to NOT think it needs to scroll, but quickly revert it
   document.body.addEventListener('focusin', event => {
     const {target} = event;
@@ -259,5 +272,16 @@ layout: demo.njk
       target.style.transform = null;
       target.style.opacity = null;
     }, 0);
+
+    setMaxHeight();
+    window.addEventListener('resize', setMaxHeight);
+  });
+
+  document.body.addEventListener('focusout', event => {
+    const {target} = event;
+    if (target.tagName !== 'INPUT' && !target.getAttribute('contenteditable')) return;
+
+    scrollableBit.style.maxHeight = null;
+    window.removeEventListener('resize', setMaxHeight);
   });
 </script>
