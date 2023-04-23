@@ -76,8 +76,8 @@ export class FrictionDOM {
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
   }
 
-  startMove(event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
-    event.preventDefault();
+  startMove(preventDefault: boolean, event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
+    if (preventDefault) event.preventDefault();
 
     this.addDraggingSurfaceObjects(surfaceObject);
     this.addActiveSurfaceObject(surfaceObject);
@@ -108,9 +108,10 @@ export class FrictionDOM {
     }
   }
 
-  endMove(): void {
+  endMove(forScrolling: boolean): void {
     for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
-      this.draggingSurfaceObjects[i].endMove(this.moveCount < 5);
+      const simulateClick: boolean = !forScrolling && this.moveCount < 5;
+      this.draggingSurfaceObjects[i].endMove(simulateClick);
       this.draggingSurfaceObjects.splice(i, 0);
     }
 

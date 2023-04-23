@@ -7,7 +7,10 @@ module.exports = function(config) {
       });
   });
 
-  config.addPassthroughCopy({'dist/umd/index.min.js': 'assets/lib/index.min.js'});
+  config.addPassthroughCopy({
+    'dist/umd/index.min.js': 'assets/lib/index.min.js',
+    'dist/umd/index.min.js.map': 'assets/lib/index.min.js.map',
+  });
 
   config.setUseGitIgnore(false);
   config.addWatchTarget('dist/**/*');

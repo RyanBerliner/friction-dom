@@ -86,6 +86,8 @@ export class SurfaceObject {
   x: AxisState;
   y: AxisState;
   currentEvent: TouchEvent | MouseEvent;
+  currentScrollLock: boolean;
+  currentScrollLockElement: HTMLElement;
 
   boundaryCallbacks: BoundaryCallbacks;
   positionCallbacks: Array<((details: PositionDetails) => void)>; // fill out
@@ -192,18 +194,17 @@ export class SurfaceObject {
     let curr: HTMLElement = target;
     while (this.element.contains(curr)) {
       if (curr.offsetHeight !== curr.scrollHeight) {
-        // lets check if we are at an endpoint
-        console.log('this can be scrolled, so lets stop')
-        return;
+        this.currentScrollLockElement = curr;
+        this.currentScrollLock= true;
+        break;
       }
 
-      console.log('checking an element', curr, this.element);
       curr = curr.parentElement;
     }
 
     this.currentEvent = event;
 
-    app.startMove(event, this);
+    app.startMove(!this.currentScrollLock, event, this);
 
     this.axis.forEach(axis => {
       this.resetAxis(axis);
@@ -231,6 +232,13 @@ export class SurfaceObject {
   }
 
   endMove(performEvent: boolean): void {
+    if (this.currentScrollLockElement) {
+      // TODO: this should revert to original, not just auto
+      this.currentScrollLockElement.style.overflowY = 'auto';
+      this.currentScrollLockElement = null;
+      this.currentScrollLock = false; // likely redundant but just in case
+    }
+
     if (this.currentEvent && performEvent) {
       const el: HTMLElement = this.currentEvent.target as HTMLElement;
       // TODO: make this a true focusable check
@@ -346,6 +354,8 @@ export class SurfaceObject {
       y: (Math.abs(this.y.velocity)/(Math.abs(this.y.velocity) + Math.abs(this.x.velocity))),
     };
 
+    let cancelMotion: boolean = false;
+
     this.axis.forEach(axis => {
       if (this.dragging) {
         let pullCoefficient = 1;
@@ -356,11 +366,33 @@ export class SurfaceObject {
         }
 
         const positionDelta = pullCoefficient * (app.cursor[axis] === undefined || app.cursorLast[axis] === undefined ? 0 : app.cursor[axis] - app.cursorLast[axis]);
-        this[`position${axis}`] += positionDelta;
-        const newVelocity = toMeters(positionDelta, scale) / timeDelta;
-        const velocityDelta = newVelocity - this[axis].velocity;
-        this[axis].velocity = newVelocity;
-        this[axis].acceleration = velocityDelta / timeDelta;
+
+        // this is our POC scroll lock handling
+        if (axis === 'y') {
+          if (this.currentScrollLock) {
+            const scrollableAmount = this.currentScrollLockElement.scrollHeight - this.currentScrollLockElement.offsetHeight;
+            const hittingTop = this.currentScrollLockElement.scrollTop <= 0;
+            const hittingBottom = this.currentScrollLockElement.scrollTop >= scrollableAmount;
+
+            if (
+              (hittingTop && positionDelta > 0) ||
+              (hittingBottom && positionDelta < 0)
+            ) {
+              this.currentScrollLockElement.style.overflowY = 'hidden';
+              this.currentScrollLock = false;
+            } else if (!hittingBottom && !hittingTop) {
+              cancelMotion = true;
+            }
+          }
+        }
+
+        if (!this.currentScrollLock) { // this is so we don't start moving until we know for sure we should
+          this[`position${axis}`] += positionDelta;
+          const newVelocity = toMeters(positionDelta, scale) / timeDelta;
+          const velocityDelta = newVelocity - this[axis].velocity;
+          this[axis].velocity = newVelocity;
+          this[axis].acceleration = velocityDelta / timeDelta;
+        }
       } else {
         this[`position${axis}`] += toPixels(this[axis].velocity * timeDelta, scale);
 
@@ -417,6 +449,10 @@ export class SurfaceObject {
         if (this[axis].velocity === 0) this[axis].settled = true;
       }
     });
+
+    if (cancelMotion) {
+      app.endMove(true);
+    }
   }
 
   onPositionChange(fn: ((details: PositionDetails) => void)): void {
