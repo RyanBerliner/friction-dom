@@ -1,6 +1,3 @@
-// the sometimes happening bug seemps to happen more often when you are touching a ddeply nested
-// object, which tells me its likely a race condition for cancelling the event
-
 import { Coordinate } from './types';
 import {app} from './FrictionDOM';
 import {toMeters, toPixels, gravity} from './utils';
