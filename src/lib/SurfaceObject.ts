@@ -88,6 +88,7 @@ export class SurfaceObject {
   currentEvent: TouchEvent | MouseEvent;
   currentScrollLock: boolean;
   currentScrollLockElement: HTMLElement;
+  currentScrollLockStyle: string;
 
   boundaryCallbacks: BoundaryCallbacks;
   positionCallbacks: Array<((details: PositionDetails) => void)>; // fill out
@@ -194,6 +195,7 @@ export class SurfaceObject {
     let curr: HTMLElement = target;
     while (this.element.contains(curr)) {
       if (curr.offsetHeight !== curr.scrollHeight) {
+        this.currentScrollLockStyle = curr.style.overflowY;
         this.currentScrollLockElement = curr;
         this.currentScrollLock= true;
       }
@@ -233,20 +235,15 @@ export class SurfaceObject {
   endMove(performEvent: boolean): void {
     if (this.currentScrollLockElement) {
       // TODO: this should revert to original, not just auto
-      this.currentScrollLockElement.style.overflowY = 'auto';
+      this.currentScrollLockElement.style.overflowY = this.currentScrollLockStyle;
+      this.currentScrollLockStyle = null;
       this.currentScrollLockElement = null;
-      this.currentScrollLock = false; // likely redundant but just in case
+      this.currentScrollLock = false;
     }
 
     if (this.currentEvent && performEvent) {
       const el: HTMLElement = this.currentEvent.target as HTMLElement;
-      // TODO: make this a true focusable check
-      if (el.tagName === 'INPUT' || el.getAttribute('contenteditable')) {
-        el.focus();
-      } else if (document.activeElement) {
-        (document.activeElement as HTMLElement).blur();
-      }
-
+      // TODO: do some sore of focus/blur handling if the target is focusable
       el.click();
     }
 
