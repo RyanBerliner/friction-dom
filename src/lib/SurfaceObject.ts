@@ -234,7 +234,6 @@ export class SurfaceObject {
 
   endMove(performEvent: boolean): void {
     if (this.currentScrollLockElement) {
-      // TODO: this should revert to original, not just auto
       this.currentScrollLockElement.style.overflowY = this.currentScrollLockStyle;
       this.currentScrollLockStyle = null;
       this.currentScrollLockElement = null;
