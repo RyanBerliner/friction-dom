@@ -2,6 +2,8 @@
 
 Treat DOM elements like objects sliding around on the page.
 
+*This is currently considered experimental.*
+
 ## The API
 
 Everything is either a `Surface` or a `SurfaceObject`. A `Surface` can contain contain many `SurfaceObject`s and a `SurfaceObject` **must** belong to a `Surface`.
@@ -12,4 +14,4 @@ This is what defines the boundaries of motions for `SurfaceObjects`. This can be
 
 ### SurfaceObject
 
-These are the objects that do the moving. They move withing the bounds of the `SurfaceObject` that they below to.
+These are the objects that do the moving. They move within the bounds of the `SurfaceObject` that they belong to.
