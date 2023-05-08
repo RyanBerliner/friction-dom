@@ -166,9 +166,7 @@ export class SurfaceObject {
   }
 
   get dragging(): boolean { return this._dragging; }
-  set dragging(d: boolean) {
-    this._dragging = d; this.element.style.cursor = d ? 'grabbing' : 'grab';
-  }
+  set dragging(d: boolean) { this._dragging = d; }
 
   get positionx(): number { return this.x.position; }
   set positionx(p: number) { this.x.position = p; this.element.style[this.options.xProp] = p + 'px'; this.callPositionCallbacks(); }
