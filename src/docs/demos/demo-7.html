@@ -1,0 +1,38 @@
+---
+title: Scroll Locking both Directions
+layout: demo.njk
+---
+
+<div class="container my-5">
+  <div id="surface" class="bg-light rounded" style="height:200px;">
+    <div id="scrollable-object" class="overflow-auto rounded rounded-sm p-3 bg-white border" style="height:100px;width:100px;">
+      <p class="text-nowrap">
+      untitled folder DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT
+      </p>
+      <p class="text-nowrap">
+      DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT
+      </p>
+      <p class="text-nowrap">
+      DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT
+      </p>
+      <p class="text-nowrap">
+      DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT
+      </p>
+      <p class="text-nowrap">
+      DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT DWIGHT
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const surface = new FrictionDOM.Surface(document.getElementById('surface'));
+  const object = new FrictionDOM.SurfaceObject(document.getElementById('scrollable-object'), surface);
+</script>
+
+<style>
+#surface {
+}
+#scrollable-object {
+}
+</style>

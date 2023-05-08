@@ -194,8 +194,9 @@ export class SurfaceObject {
 
     let curr: HTMLElement = target;
     while (this.element.contains(curr)) {
-      if (curr.offsetHeight !== curr.scrollHeight) {
-        this.currentScrollLockStyle = curr.style.overflowY;
+      const overflowY: string = window.getComputedStyle(curr).getPropertyValue('overflow-y');
+      if (curr.offsetHeight !== curr.scrollHeight && overflowY !== 'hidden') {
+        this.currentScrollLockStyle = overflowY;
         this.currentScrollLockElement = curr;
         this.currentScrollLock= true;
       }
@@ -242,7 +243,6 @@ export class SurfaceObject {
 
     if (this.currentEvent && performEvent) {
       const el: HTMLElement = this.currentEvent.target as HTMLElement;
-      // TODO: do some sore of focus/blur handling if the target is focusable
       el.click();
     }
 
@@ -362,7 +362,7 @@ export class SurfaceObject {
 
         const positionDelta = pullCoefficient * (app.cursor[axis] === undefined || app.cursorLast[axis] === undefined ? 0 : app.cursor[axis] - app.cursorLast[axis]);
 
-        // this is our POC scroll lock handling
+        // TODO: make this work for both axis
         if (axis === 'y') {
           if (this.currentScrollLock) {
             const scrollableAmount = this.currentScrollLockElement.scrollHeight - this.currentScrollLockElement.offsetHeight;
