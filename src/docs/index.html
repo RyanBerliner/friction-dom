@@ -3,9 +3,12 @@ title: Friction DOM Hompage
 layout: base.njk
 ---
 
-<div class="container">
+<div class="alert alert-danger text-center border-start-0 border-end-0 rounded-0 fixed-top">
+  This is currently considered experimental.
+</div>
+<div class="container pt-5">
   <div class="my-5">
-    <h1 class="text-center">Friction DOM</h1>
+    <h1 class="text-center text-body-emphasis">Friction DOM</h1>
     <p class="text-center lead">Add interactive motion to websites.</p>
     <div class="d-md-flex align-items-stretch justify-content-center mb-3">
       <div class="bg-body-tertiary border rounded-3 p-2 d-flex align-items-center me-md-3 mb-md-0 mb-3 justify-content-md-center justify-content-between">
@@ -46,7 +49,6 @@ layout: base.njk
       </div>
       <a href="#demos" class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-center">Explore Demos</a>
     </div>
-    <p class="text-center text-danger mb-5">This is currently considered experimental.</p>
   </div>
   <div class="row align-items-stretch my-5">
     <div class="col-md-6">
@@ -107,13 +109,15 @@ layout: base.njk
     </div>
   </div>
 
-
-  <h2 id="demos">View some demos</h2>
-
-  <ul>
+  <ul class="list-unstyled row" id="demos">
   {%- for demo in collections.demo -%}
-  <li>
-    <a href="{{ demo.url }}">{{ demo.data.title }}</a>
+  <li class="col-lg-4 col-md-6">
+    <h2 class="h5 mb-1">
+      <a href="{{ demo.url }}" class="text-body-emphasis text-decoration-none">
+        {{ demo.data.title }}
+      </a>
+    </h2>
+    <p class="opacity-75">{{ demo.data.description }}</p>
   </li>
   {%- endfor -%}
   </ul>
