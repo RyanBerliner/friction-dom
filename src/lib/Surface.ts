@@ -30,7 +30,7 @@ type SurfaceOptions = {
   paddingMaxY: SurfacePadding,
 };
 
-type SurfaceBounds = typeof window | HTMLElement | Array<Coordinate>;
+type SurfaceBounds = typeof window | HTMLElement | Array<Coordinate> | string;
 
 export class Surface {
   element: SurfaceBounds;
@@ -44,7 +44,7 @@ export class Surface {
   maxY: number;
 
   constructor(element: SurfaceBounds, options: Partial<SurfaceOptions>) {
-    this.element = element;
+    this.element = typeof(element) === 'string' ? document.getElementById(element) : element;
     this.surfaceObjects = [];
     this.resizeTimeout;
 

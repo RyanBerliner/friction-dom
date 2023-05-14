@@ -37,13 +37,13 @@ layout: base.njk
         <div id="surface-object-demo" style="width:40px;height:40px;" class="bg-primary rounded-circle position-relative"></div>
       </div>
       <script>
-        const surface = new FrictionDOM.Surface(document.getElementById('surface-demo'), {
+        const surface = new FrictionDOM.Surface('surface-demo', {
           paddingMinX: 16,
           paddingMaxX: 16,
           paddingMinY: 16,
           paddingMaxY: 16,
         });
-        const object = new FrictionDOM.SurfaceObject(document.getElementById('surface-object-demo'), surface);
+        const object = new FrictionDOM.SurfaceObject('surface-object-demo', surface);
         document.getElementById('ts').addEventListener('click', () => object.goto(['x-min', 'y-min']));
         document.getElementById('te').addEventListener('click', () => object.goto(['x-max', 'y-min']));
         document.getElementById('bs').addEventListener('click', () => object.goto(['x-min', 'y-max']));

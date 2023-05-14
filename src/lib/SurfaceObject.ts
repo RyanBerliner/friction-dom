@@ -95,7 +95,7 @@ export class SurfaceObject {
 
   _dragging: boolean;
 
-  constructor(element: HTMLElement, surface: Surface, options: Partial<SurfaceObjectOptions>) {
+  constructor(element: HTMLElement | string, surface: Surface, options: Partial<SurfaceObjectOptions>) {
     app.surfaceObjects.push(this);
 
     this.positionCallbacks = [];
@@ -103,7 +103,7 @@ export class SurfaceObject {
     this.surface = surface;
     this.surface.surfaceObjects.push(this);
 
-    this.element = element;
+    this.element = typeof(element) === 'string' ? document.getElementById(element) : element;
     this.element.style.position = surface.element === window ? 'fixed' : 'relative';
 
     this.options = {
