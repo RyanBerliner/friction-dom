@@ -16,6 +16,7 @@ module.exports = function(config) {
   config.addWatchTarget('dist/**/*');
 
   return {
+    pathPrefix: '/friction-dom/',
     dir: {
       input: 'src/docs',
       output: 'docs',
