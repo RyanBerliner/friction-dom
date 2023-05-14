@@ -3,51 +3,16 @@ title: Friction DOM Hompage
 layout: base.njk
 ---
 
-<div class="alert alert-danger text-center border-start-0 border-end-0 rounded-0 fixed-top">
+<div class="alert alert-danger text-center border-start-0 border-end-0 rounded-0">
   This is currently considered experimental.
 </div>
-<div class="container pt-5">
-  <div class="my-5">
+<div class="container my-5">
+  <div>
     <h1 class="text-center text-body-emphasis">Friction DOM</h1>
     <p class="text-center lead">Add interactive motion to websites.</p>
-    <div class="d-md-flex align-items-stretch justify-content-center mb-3">
-      <div class="bg-body-tertiary border rounded-3 p-2 d-flex align-items-center me-md-3 mb-md-0 mb-3 justify-content-md-center justify-content-between">
-        <pre class="mb-0 ms-2 p-0 border-0 bg-transparent" id="npm-i-text">npm i friction-dom</pre>
-        <button class="ms-3 btn btn-primary rounded-1 position-relative" id="npm-i-btn">Copy</button>
-        <script type="text/template" id="check-svg">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" style="bottom:2px;position:relative;" viewBox="0 0 16 16">
-            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
-          </svg>
-        </script>
-        <script>
-          let copyTimeout;
-          const copyText = document.getElementById('npm-i-text');
-          const copyBtn = document.getElementById('npm-i-btn');
-          const copyPrompt = copyBtn.querySelector('span');
-          const copySuccess = copyBtn.querySelector('span');
-          const copyCont = copyBtn.parentElement;
-
-          copyBtn.addEventListener('click', () => {
-            clearTimeout(copyTimeout);
-
-            navigator.clipboard.writeText(copyText.innerText)
-              .then(() => {
-                copyBtn.style.width = copyBtn.offsetWidth + 'px';
-                copyBtn.innerHTML = document.getElementById('check-svg').innerHTML;
-                copyCont.classList.add('border-primary', 'bg-primary-subtle');
-                copyText.classList.add('text-primary');
-
-                copyTimeout = setTimeout(() => {
-                  copyBtn.style.width = null;
-                  copyBtn.innerText = 'Copy';
-                  copyCont.classList.remove('border-primary', 'bg-primary-subtle');
-                  copyText.classList.remove('text-primary');
-                }, 1500);
-              })
-          });
-        </script>
-      </div>
-      <a href="#demos" class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-center">Explore Demos</a>
+    <div class="text-center">
+      <a href="https://github.com/RyanBerliner/friction-dom" class="me-3 btn btn-lg btn-primary">View on GitHub</a>
+      <a href="#demos" class="btn btn-lg btn-outline-primary">Explore Demos</a>
     </div>
   </div>
   <div class="row align-items-stretch my-5">
@@ -58,8 +23,8 @@ layout: base.njk
   <div id="surface-object"></div>
 </div>
 <script>
-  const surface = new Surface("surface");
-  const object = new SurfaceObject("surface-object", surface);
+  const surface = new FrictionDOM.Surface("surface");
+  const object = new FrictionDOM.SurfaceObject("surface-object", surface);
 </script>' | escape }}</pre>
     </div>
     <div class="col-md-6 d-flex flex-column">
@@ -109,16 +74,58 @@ layout: base.njk
     </div>
   </div>
 
-  <ul class="list-unstyled row" id="demos">
+  <h2 id="demos" class="text-body-emphasis">Demos</h2>
+  <p class="lead mb-5">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
+
+  <ul class="list-unstyled row">
   {%- for demo in collections.demo -%}
   <li class="col-lg-4 col-md-6">
-    <h2 class="h5 mb-1">
+    <h3 class="h5 mb-1">
       <a href="{{ demo.url }}" class="text-body-emphasis text-decoration-none">
         {{ demo.data.title }}
       </a>
-    </h2>
+    </h3>
     <p class="opacity-75">{{ demo.data.description }}</p>
   </li>
   {%- endfor -%}
   </ul>
+
+  <h2 class="text-body-emphasis">Some Thoughts</h2>
+  <p>
+    This is currently considered experimental. To be honest it will likely never move out of experimental status...
+    only playing around with an idea. It's reached a point where I could now reach for this in some personal projects
+    when I'd like to. Should I have needs that require further developement on it perhaps then I'll get it more stable
+    and built out. Some remaining things I'd most likely have to work on next:
+  </p>
+  <ol>
+    <li class="mb-2">
+      Input (or any other interactive element) handling within a <code>SurfaceObject</code> needs to be supported. There is
+      very basic "click" passthrough now to meet basic use cases but this would need to be a bit more robust for use
+      cases like forms.
+    </li>
+    <li class="mb-2">
+      Documentation... there is none. I added some typescript types at mostly the last minute thinking it would be a passable
+      form of documentation (mostly for myself to rememeber options and option types). It works for now, but to know how to use
+      this you'll have to look at the types for <code>Surface</code> and <code>SurfaceObject</code>.
+    </li>
+    <li class="mb-2">
+      Horizontal scroll support with <code>SurfactObject</code>s. I added vertical support for the iOS demo because that
+      is a common use as I'd see it, but this should also work horizontally (less likely, but not reason some features
+      should only work Y axis and not X axis.
+    </li>
+    <li class="mb-2">
+      Thresholding and <code>goto</code>. Thresholding is a bit buggy currently... would want ot fix that. In the same sense
+      the code for <code>goto</code> just "pushes" the object so it perfectly makes it to a boundary. This results in really
+      slow movements that can be frustrating. Maybe this should be more spring oriented or something similar.
+      Maybe <code>goto</code> is customizable. Not sure, but its not great behavior currently.
+    </li>
+    <li class="mb-2">
+      Will this be released on a package manager at some point? Maybe, if I dedicate some more time to doing the things
+      mentioned above. Not likely.
+    </li>
+    <li class="mb-2">
+      Probably other things I forgot about...
+    </li>
+  </ol>
+
 </div>
