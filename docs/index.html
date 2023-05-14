@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction DOM Hompage</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <style>
+  pre {
+    background-color: rgb(var(--bs-tertiary-bg-rgb));
+    border-radius: var(--bs-border-radius-lg);
+    border-width: var(--bs-border-width);
+    border-style: var(--bs-border-style);
+    border-color: var(--bs-border-color);
+    padding: 1rem;
+  }
+</style>
+
+  <body>
+    <script src="/assets/lib/index.min.js"></script>
+    
+<div class="alert alert-danger text-center border-start-0 border-end-0 rounded-0">
+  This is currently considered experimental.
+</div>
+<div class="container my-5">
+  <div>
+    <h1 class="text-center text-body-emphasis">Friction DOM</h1>
+    <p class="text-center lead">Add interactive motion to websites.</p>
+    <div class="text-center">
+      <a href="https://github.com/RyanBerliner/friction-dom" class="me-3 btn btn-lg btn-primary">View on GitHub</a>
+      <a href="#demos" class="btn btn-lg btn-outline-primary">Explore Demos</a>
+    </div>
+  </div>
+  <div class="row align-items-stretch my-5">
+    <div class="col-md-6">
+      <p class="ms-3">Define a surface and add an object.</p>
+      <pre class="mb-md-0">
+&lt;div id=&#34;surface&#34;&gt;
+  &lt;div id=&#34;surface-object&#34;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  const surface = new FrictionDOM.Surface(&#34;surface&#34;);
+  const object = new FrictionDOM.SurfaceObject(&#34;surface-object&#34;, surface);
+&lt;/script&gt;</pre>
+    </div>
+    <div class="col-md-6 d-flex flex-column">
+      <p class="ms-3">Receive touch-friendly interactive motion.</p>
+      <div id="surface-demo" style="min-height:140px;" class="position-relative border border-primary bg-primary-subtle rounded-3 flex-grow-1">
+        <button class="po-0 position-absolute start-0 top-0 rounded-2 bg-transparent border-top border-start border-3 border-primary m-1" id="ts"><span class="visually-hidden">Top Left</span></button>
+        <button class="po-0 position-absolute end-0 top-0 rounded-2 bg-transparent border-top border-end border-3 border-primary m-1" id="te"><span class="visually-hidden">Top Right</span></button>
+        <button class="po-0 position-absolute start-0 bottom-0 rounded-2 bg-transparent border-bottom border-start border-3 border-primary m-1" id="bs"><span class="visually-hidden">Bottom Left</span></button>
+        <button class="po-0 position-absolute end-0 bottom-0 rounded-2 bg-transparent border-bottom border-end border-3 border-primary m-1" id="be"><span class="visually-hidden">Bottom Right</span></button>
+        <div id="surface-object-demo" style="width:40px;height:40px;" class="bg-primary rounded-circle position-relative"></div>
+      </div>
+      <script>
+        const surface = new FrictionDOM.Surface('surface-demo', {
+          paddingMinX: 16,
+          paddingMaxX: 16,
+          paddingMinY: 16,
+          paddingMaxY: 16,
+        });
+        const object = new FrictionDOM.SurfaceObject('surface-object-demo', surface);
+        document.getElementById('ts').addEventListener('click', () => object.goto(['x-min', 'y-min']));
+        document.getElementById('te').addEventListener('click', () => object.goto(['x-max', 'y-min']));
+        document.getElementById('bs').addEventListener('click', () => object.goto(['x-min', 'y-max']));
+        document.getElementById('be').addEventListener('click', () => object.goto(['x-max', 'y-max']));
+      </script>
+      <style>
+        #surface-object-demo {
+          animation: shake 0.5s 1s 1;
+          transform: translate(0,0);
+        }
+        @keyframes shake {
+          0%, 100% { transform: translate(0, 0);}
+          20%, 60% { transform: translateX(10px);}
+          40%, 80% { transform: translateX(-10px);}
+        }
+        #ts, #te, #bs, #be {
+          height: 1.5rem;
+          width: 1.5rem;
+          border: none;
+          display: block;
+          opacity: 0.4;
+        }
+        #ts { border-top-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+        #te { border-top-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        #bs { border-top-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        #be { border-top-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+      </style>
+    </div>
+  </div>
+
+  <h2 id="demos" class="text-body-emphasis">Demos</h2>
+  <p class="lead mb-5">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
+
+  <ul class="list-unstyled row"><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/custom-properties/" class="text-body-emphasis text-decoration-none">
+        Custom Properties
+      </a>
+    </h3>
+    <p class="opacity-75">Motion can be applied to more than just position, height and width is changed in this demo.</p>
+  </li><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/hello-world/" class="text-body-emphasis text-decoration-none">
+        Hello World
+      </a>
+    </h3>
+    <p class="opacity-75">An introductory demo showing a interactable object within a boundary.</p>
+  </li><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/ios-style-offcanvas/" class="text-body-emphasis text-decoration-none">
+        iOS Style Offcanvas
+      </a>
+    </h3>
+    <p class="opacity-75">This is a flex of available callbacks and events to re-create some of the iOS mail experience.</p>
+  </li><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/locked-axis/" class="text-body-emphasis text-decoration-none">
+        Locked Axis
+      </a>
+    </h3>
+    <p class="opacity-75">Axis can be locked to limit motion to a single direction.</p>
+  </li><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/nested-objects/" class="text-body-emphasis text-decoration-none">
+        Nested Objects
+      </a>
+    </h3>
+    <p class="opacity-75">You can add an extra layer of elasticity by nesting objects and surfaces.</p>
+  </li><li class="col-lg-4 col-md-6">
+    <h3 class="h5 mb-1">
+      <a href="/demos/thresholding/" class="text-body-emphasis text-decoration-none">
+        Nudge Thresholding
+      </a>
+    </h3>
+    <p class="opacity-75">Set nudge thresholding to disallow objects to be hover in no mans land.</p>
+  </li></ul>
+
+  <h2 class="text-body-emphasis">Some Thoughts</h2>
+  <p>
+    This is currently considered experimental. To be honest it will likely never move out of experimental status...
+    only playing around with an idea. It's reached a point where I could now reach for this in some personal projects
+    when I'd like to. Should I have needs that require further developement on it perhaps then I'll get it more stable
+    and built out. Some remaining things I'd most likely have to work on next:
+  </p>
+  <ol>
+    <li class="mb-2">
+      Input (or any other interactive element) handling within a <code>SurfaceObject</code> needs to be supported. There is
+      very basic "click" passthrough now to meet basic use cases but this would need to be a bit more robust for use
+      cases like forms.
+    </li>
+    <li class="mb-2">
+      Documentation... there is none. I added some typescript types at mostly the last minute thinking it would be a passable
+      form of documentation (mostly for myself to rememeber options and option types). It works for now, but to know how to use
+      this you'll have to look at the types for <code>Surface</code> and <code>SurfaceObject</code>.
+    </li>
+    <li class="mb-2">
+      Horizontal scroll support with <code>SurfactObject</code>s. I added vertical support for the iOS demo because that
+      is a common use as I'd see it, but this should also work horizontally (less likely, but not reason some features
+      should only work Y axis and not X axis.
+    </li>
+    <li class="mb-2">
+      Thresholding and <code>goto</code>. Thresholding is a bit buggy currently... would want to fix that. In the same sense
+      the code for <code>goto</code> just "pushes" the object so it perfectly makes it to a boundary. This results in really
+      slow movements that can be frustrating. Maybe this should be more spring oriented or something similar.
+      Maybe <code>goto</code> is customizable. Not sure, but its not great behavior currently.
+    </li>
+    <li class="mb-2">
+      Will this be released on a package manager at some point? Maybe, if I dedicate some more time to doing the things
+      mentioned above. Not likely.
+    </li>
+    <li class="mb-2">
+      Probably other things I forgot about...
+    </li>
+  </ol>
+
+</div>
+
+    <script>
+  // match the users os theme
+
+  function setTheme() {
+    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-bs-theme', theme);
+  }
+
+  setTheme();
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    setTheme();
+  });
+</script>
+
+  </body>
+</html>
