@@ -10,6 +10,7 @@ module.exports = function(config) {
   config.addPassthroughCopy({
     'dist/umd/index.min.js': 'assets/lib/index.min.js',
     'dist/umd/index.min.js.map': 'assets/lib/index.min.js.map',
+    'src/docs/images': 'assets/images',
   });
 
   config.setUseGitIgnore(false);

@@ -77,12 +77,23 @@ layout: base.njk
   <h2 id="demos" class="text-body-emphasis">Demos</h2>
   <p class="lead mb-5">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
 
-  <ul class="list-unstyled row">
+  <ul class="list-unstyled row align-items-end">
   {%- for demo in collections.demo -%}
   <li class="col-lg-4 col-md-6">
     <h3 class="h5 mb-1">
-      <a href="{{ demo.url | url }}" class="text-body-emphasis text-decoration-none">
-        {{ demo.data.title }}
+      <a href="{{ demo.url | url }}" class="text-body-emphasis text-decoration-none d-block">
+        {% if demo.data.gif %}
+          <img
+            alt=""
+            class="mb-3 text-center mw-100"
+            data-dark-src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
+            data-light-src="{{ '/assets/images/' | url }}light-{{ demo.data.gif }}.GIF"
+            src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
+          />
+        {% endif %}
+        <span class="d-block">
+          {{ demo.data.title }}
+        </span>
       </a>
     </h3>
     <p class="opacity-75">{{ demo.data.description }}</p>
