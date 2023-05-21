@@ -3,16 +3,13 @@ title: Friction DOM Hompage
 layout: base.njk
 ---
 
-<div class="alert alert-danger text-center border-start-0 border-end-0 rounded-0">
-  This is currently considered experimental.
-</div>
 <div class="container my-5">
   <div>
     <h1 class="text-center text-body-emphasis">Friction DOM</h1>
     <p class="text-center lead">Add interactive motion to websites.</p>
     <div class="d-flex flex-md-row flex-column justify-content-center">
-      <a href="https://github.com/RyanBerliner/friction-dom" class="mb-3 mb-md-0 me-md-3 btn btn-lg btn-primary">View on GitHub</a>
-      <a href="#demos" class="btn btn-lg btn-outline-primary">Explore Demos</a>
+      <a href="#demos" class="mb-3 mb-md-0 me-md-3 btn btn-lg btn-primary">Explore Demos</a>
+      <a href="https://github.com/RyanBerliner/friction-dom" class="btn btn-lg btn-outline-primary">View on GitHub</a>
     </div>
   </div>
   <div class="row align-items-stretch my-5">
@@ -74,8 +71,10 @@ layout: base.njk
     </div>
   </div>
 
-  <h2 id="demos" class="text-body-emphasis">Demos</h2>
-  <p class="lead mb-3">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
+  <div class="text-center">
+    <h2 id="demos" class="text-body-emphasis">Demos</h2>
+    <p class="lead mb-3">View the source code of each to learn how it was done.</p>
+  </div>
 
   <ul class="list-unstyled row align-items-start">
   {%- for demo in collections.demo -%}
@@ -103,42 +102,44 @@ layout: base.njk
   {%- endfor -%}
   </ul>
 
-  <h2 class="text-body-emphasis">Some Thoughts</h2>
-  <p>
-    This is currently considered experimental. To be honest it will likely never move out of experimental status...
-    only playing around with an idea. It's reached a point where I could now reach for this in some personal projects
-    when I'd like to. Should I have needs that require further developement on it perhaps then I'll get it more stable
-    and built out. Some remaining things I'd most likely have to work on next:
-  </p>
-  <ol>
-    <li class="mb-2">
-      Input (or any other interactive element) handling within a <code>SurfaceObject</code> needs to be supported. There is
-      very basic "click" passthrough now to meet basic use cases but this would need to be a bit more robust for use
-      cases like forms.
-    </li>
-    <li class="mb-2">
-      Documentation... there is none. I added some typescript types at mostly the last minute thinking it would be a passable
-      form of documentation (mostly for myself to rememeber options and option types). It works for now, but to know how to use
-      this you'll have to look at the types for <code>Surface</code> and <code>SurfaceObject</code>.
-    </li>
-    <li class="mb-2">
-      Horizontal scroll support with <code>SurfactObject</code>s. I added vertical support for the iOS demo because that
-      is a common use as I'd see it, but this should also work horizontally (less likely, but not reason some features
-      should only work Y axis and not X axis.
-    </li>
-    <li class="mb-2">
-      Thresholding and <code>goto</code>. Thresholding is a bit buggy currently... would want to fix that. In the same sense
-      the code for <code>goto</code> just "pushes" the object so it perfectly makes it to a boundary. This results in really
-      slow movements that can be frustrating. Maybe this should be more spring oriented or something similar.
-      Maybe <code>goto</code> is customizable. Not sure, but its not great behavior currently.
-    </li>
-    <li class="mb-2">
-      Will this be released on a package manager at some point? Maybe, if I dedicate some more time to doing the things
-      mentioned above. Not likely.
-    </li>
-    <li class="mb-2">
-      Probably other things I forgot about...
-    </li>
-  </ol>
+  <div style="max-width: 50em;" class="mx-auto my-5">
+    <h2 class="text-body-emphasis">Some Thoughts</h2>
+    <p>
+      <span class="text-danger">This is currently considered experimental.</span> To be honest it will likely never move out of experimental status...
+      only playing around with an idea. It's reached a point where I could now reach for this in some personal projects
+      when I'd like to. Should I have needs that require further developement on it perhaps then I'll get it more stable
+      and built out. Some remaining things I'd most likely have to work on next:
+    </p>
+    <ol>
+      <li class="mb-2">
+        Input (or any other interactive element) handling within a <code>SurfaceObject</code> needs to be supported. There is
+        very basic "click" passthrough now to meet basic use cases but this would need to be a bit more robust for use
+        cases like forms.
+      </li>
+      <li class="mb-2">
+        Documentation... there is none. I added some typescript types at mostly the last minute thinking it would be a passable
+        form of documentation (mostly for myself to rememeber options and option types). It works for now, but to know how to use
+        this you'll have to look at the types for <code>Surface</code> and <code>SurfaceObject</code>.
+      </li>
+      <li class="mb-2">
+        Horizontal scroll support with <code>SurfactObject</code>s. I added vertical support for the iOS demo because that
+        is a common use as I'd see it, but this should also work horizontally (less likely, but not reason some features
+        should only work Y axis and not X axis.
+      </li>
+      <li class="mb-2">
+        Thresholding and <code>goto</code>. Thresholding is a bit buggy currently... would want to fix that. In the same sense
+        the code for <code>goto</code> just "pushes" the object so it perfectly makes it to a boundary. This results in really
+        slow movements that can be frustrating. Maybe this should be more spring oriented or something similar.
+        Maybe <code>goto</code> is customizable. Not sure, but its not great behavior currently.
+      </li>
+      <li class="mb-2">
+        Will this be released on a package manager at some point? Maybe, if I dedicate some more time to doing the things
+        mentioned above. Not likely.
+      </li>
+      <li class="mb-2">
+        Probably other things I forgot about...
+      </li>
+    </ol>
+  </div>
 
 </div>
