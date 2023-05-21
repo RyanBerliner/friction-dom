@@ -75,28 +75,30 @@ layout: base.njk
   </div>
 
   <h2 id="demos" class="text-body-emphasis">Demos</h2>
-  <p class="lead mb-5">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
+  <p class="lead mb-3">Some examples of Friction DOM in action. View the source code of each to learn how it was done.</p>
 
-  <ul class="list-unstyled row align-items-end">
+  <ul class="list-unstyled row align-items-start">
   {%- for demo in collections.demo -%}
-  <li class="col-lg-4 col-md-6">
-    <h3 class="h5 mb-1">
-      <a href="{{ demo.url | url }}" class="text-body-emphasis text-decoration-none d-block">
-        {% if demo.data.gif %}
-          <img
-            alt=""
-            class="mb-3 text-center mw-100"
-            data-dark-src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
-            data-light-src="{{ '/assets/images/' | url }}light-{{ demo.data.gif }}.GIF"
-            src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
-          />
-        {% endif %}
-        <span class="d-block">
-          {{ demo.data.title }}
-        </span>
-      </a>
-    </h3>
-    <p class="opacity-75">{{ demo.data.description }}</p>
+  <li class="col-lg-4 col-md-6 my-3">
+    <div class="border p-3 rounded">
+      <h3 class="h5 mb-1">
+        <a href="{{ demo.url | url }}" class="text-body-emphasis d-block">
+          {% if demo.data.gif %}
+            <img
+              alt=""
+              class="mb-4 ms-auto me-auto d-block mw-100"
+              data-dark-src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
+              data-light-src="{{ '/assets/images/' | url }}light-{{ demo.data.gif }}.GIF"
+              src="{{ '/assets/images/' | url }}dark-{{ demo.data.gif }}.GIF"
+            />
+          {% endif %}
+          <span class="d-block">
+            {{ demo.data.title }}
+          </span>
+        </a>
+      </h3>
+      <p class="opacity-75 mb-0">{{ demo.data.description }}</p>
+    </div>
   </li>
   {%- endfor -%}
   </ul>
