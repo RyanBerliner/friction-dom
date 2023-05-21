@@ -62,6 +62,10 @@
   function setTheme() {
     const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-bs-theme', theme);
+    const images = document.body.querySelectorAll('img[data-light-src][data-dark-src]');
+    images.forEach(img => {
+      img.src = img.getAttribute(`data-${theme}-src`);
+    });
   }
 
   setTheme();
