@@ -116,7 +116,7 @@
                 event.preventDefault();
             this.addDraggingSurfaceObjects(surfaceObject);
             this.addActiveSurfaceObject(surfaceObject);
-            if (event.hasOwnProperty('targetTouches')) {
+            if (event.targetTouches) {
                 this.cursor.x = undefined;
                 this.cursor.y = undefined;
                 this.cursorLast.x = undefined;
@@ -130,7 +130,7 @@
         }
         move(event) {
             this.moveCount++;
-            if (event.hasOwnProperty('targetTouches')) {
+            if (event.targetTouches) {
                 const { screenX, screenY } = event.targetTouches[0];
                 this.cursor.x = screenX;
                 this.cursor.y = screenY;
