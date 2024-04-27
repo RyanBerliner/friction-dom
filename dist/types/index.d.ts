@@ -3,6 +3,7 @@ declare module "types" {
         x: number;
         y: number;
     };
+    export type AppTouchEvent = TouchEvent;
 }
 declare module "utils" {
     /**
@@ -60,7 +61,7 @@ declare module "Surface" {
     }
 }
 declare module "SurfaceObject" {
-    import { Coordinate } from "types";
+    import type { AppTouchEvent, Coordinate } from "types";
     import { Surface } from "Surface";
     type Axis = 'x' | 'y';
     type Boundary = 'x-min' | 'x-max' | 'y-min' | 'y-max';
@@ -138,7 +139,7 @@ declare module "SurfaceObject" {
         options: SurfaceObjectOptions;
         x: AxisState;
         y: AxisState;
-        currentEvent: TouchEvent | MouseEvent;
+        currentEvent: AppTouchEvent | MouseEvent;
         currentScrollLock: boolean;
         currentScrollLockElement: HTMLElement;
         currentScrollLockStyle: string;
@@ -169,7 +170,7 @@ declare module "SurfaceObject" {
     }
 }
 declare module "FrictionDOM" {
-    import { Coordinate } from "types";
+    import type { AppTouchEvent, Coordinate } from "types";
     import { SurfaceObject } from "SurfaceObject";
     export class FrictionDOM {
         cursor: Coordinate;
@@ -186,9 +187,9 @@ declare module "FrictionDOM" {
         addDraggingSurfaceObjects(obj: SurfaceObject): void;
         beginMotion(withObject?: SurfaceObject): void;
         updateMotion(): void;
-        startMove(preventDefault: boolean, event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void;
-        move(event: TouchEvent | MouseEvent): void;
-        endMove(_: TouchEvent | MouseEvent, forScrolling: boolean): void;
+        startMove(preventDefault: boolean, event: AppTouchEvent | MouseEvent, surfaceObject: SurfaceObject): void;
+        move(event: AppTouchEvent | MouseEvent): void;
+        endMove(_: AppTouchEvent | MouseEvent, forScrolling: boolean): void;
     }
     export const app: FrictionDOM;
 }

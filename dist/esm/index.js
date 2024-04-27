@@ -110,7 +110,7 @@ class FrictionDOM {
             event.preventDefault();
         this.addDraggingSurfaceObjects(surfaceObject);
         this.addActiveSurfaceObject(surfaceObject);
-        if (event instanceof TouchEvent) {
+        if (event.hasOwnProperty('targetTouches')) {
             this.cursor.x = undefined;
             this.cursor.y = undefined;
             this.cursorLast.x = undefined;
@@ -124,7 +124,7 @@ class FrictionDOM {
     }
     move(event) {
         this.moveCount++;
-        if (event instanceof TouchEvent) {
+        if (event.hasOwnProperty('targetTouches')) {
             const { screenX, screenY } = event.targetTouches[0];
             this.cursor.x = screenX;
             this.cursor.y = screenY;
