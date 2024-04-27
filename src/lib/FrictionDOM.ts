@@ -1,4 +1,4 @@
-import {Coordinate} from './types';
+import type {AppTouchEvent, Coordinate} from './types';
 import { SurfaceObject } from './SurfaceObject';
 import {toSeconds} from './utils';
 
@@ -76,13 +76,13 @@ export class FrictionDOM {
     this.raf = window.requestAnimationFrame(this.updateMotion.bind(this))
   }
 
-  startMove(preventDefault: boolean, event: TouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
+  startMove(preventDefault: boolean, event: AppTouchEvent | MouseEvent, surfaceObject: SurfaceObject): void {
     if (preventDefault) event.preventDefault();
 
     this.addDraggingSurfaceObjects(surfaceObject);
     this.addActiveSurfaceObject(surfaceObject);
 
-    if (event instanceof TouchEvent) {
+    if (event.hasOwnProperty('targetTouches')) {
       this.cursor.x = undefined;
       this.cursor.y = undefined;
       this.cursorLast.x = undefined;
@@ -95,20 +95,20 @@ export class FrictionDOM {
     this.beginMotion();
   }
 
-  move(event: TouchEvent | MouseEvent): void {
+  move(event: AppTouchEvent | MouseEvent): void {
     this.moveCount++;
 
-    if (event instanceof TouchEvent) {
-      const {screenX, screenY} = event.targetTouches[0];
+    if (event.hasOwnProperty('targetTouches')) {
+      const {screenX, screenY} = (event as AppTouchEvent).targetTouches[0];
       this.cursor.x = screenX;
       this.cursor.y = screenY;
     } else {
-      this.cursor.x = event.clientX;
-      this.cursor.y = event.clientY;
+      this.cursor.x = (event as MouseEvent).clientX;
+      this.cursor.y = (event as MouseEvent).clientY;
     }
   }
 
-  endMove(_: TouchEvent | MouseEvent, forScrolling: boolean): void {
+  endMove(_: AppTouchEvent | MouseEvent, forScrolling: boolean): void {
     for (let i = this.draggingSurfaceObjects.length - 1; i >= 0; i--) {
       const simulateClick: boolean = !forScrolling && this.moveCount < 5;
       this.draggingSurfaceObjects[i].endMove(simulateClick);

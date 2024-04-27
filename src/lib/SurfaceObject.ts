@@ -1,4 +1,4 @@
-import { Coordinate } from './types';
+import type { AppTouchEvent, Coordinate } from './types';
 import {app} from './FrictionDOM';
 import {toMeters, toPixels, gravity} from './utils';
 import { Surface } from './Surface';
@@ -85,7 +85,7 @@ export class SurfaceObject {
   options: SurfaceObjectOptions;
   x: AxisState;
   y: AxisState;
-  currentEvent: TouchEvent | MouseEvent;
+  currentEvent: AppTouchEvent | MouseEvent;
   currentScrollLock: boolean;
   currentScrollLockElement: HTMLElement;
   currentScrollLockStyle: string;
